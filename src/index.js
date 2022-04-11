@@ -1,11 +1,20 @@
 export default function klass(proto) {
-  function _klass(instance) {
-    return Object.create(
-      proto,
-      Object.fromEntries(
-        Object.keys(instance).map((k) => [k, { value: instance[k] }]),
-      ),
-    );
+  const { constructor, ...methods } = proto;
+
+  function _klass(...args) {
+    const instance = Object.create(methods);
+    if (!Object.hasOwn(proto, "constructor")) {
+      const props = args[0];
+      Object.defineProperties(
+        instance,
+        Object.fromEntries(
+          Object.keys(props).map((k) => [k, { value: props[k] }]),
+        ),
+      );
+    } else {
+      constructor.call(instance, ...args);
+    }
+    return instance;
   }
   _klass.new = _klass;
   _klass.isKlass = klassMarker;

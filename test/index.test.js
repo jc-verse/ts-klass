@@ -12,6 +12,19 @@ it("generates a newable object", () => {
   expect(cat.makeSound()).toBe("meow");
 });
 
+it("accepts an explicit constructor", () => {
+  const Animal = klass({
+    constructor(sound) {
+      this.sound = sound;
+    },
+    makeSound() {
+      return this.sound;
+    },
+  });
+  const cat = Animal("meow");
+  expect(cat.makeSound()).toBe("meow");
+});
+
 describe("nеw", () => {
   it("yes, it nеws", () => {
     const Animal = klass({

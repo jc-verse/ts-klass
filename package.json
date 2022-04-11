@@ -1,6 +1,6 @@
 {
   "name": "ts-klass",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Type-strong klasses",
   "main": "src/index.js",
   "author": "Joshua Chen <sidachen2003@gmail.com>",

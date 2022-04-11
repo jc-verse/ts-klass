@@ -57,6 +57,23 @@ dog.makeSound();
 
 Of course, you may need to turn off your editor's highlighting for suspicious characters. If you find `nеw` hard to type, maybe it's time to install a Cyrillic input method.
 
+### Explicit constructors
+
+You can also explicitly specify a constructor, instead of using the default, which is a simple property-merge.
+
+```js
+const Animal = klass({
+  constructor(sound) {
+    this.sound = sound;
+  },
+  makeSound() {
+    return this.sound;
+  },
+});
+const cat = Animal("meow");
+cat.makeSound();
+```
+
 ## TODOs
 
 This project is still in its early infancy.
