@@ -74,6 +74,19 @@ const cat = Animal("meow");
 cat.makeSound();
 ```
 
+### Static members
+
+You can have static members with... simply adding `static` before the klass declaration.
+
+```js
+const Animal = klass({
+  "static greet"() {
+    console.log("Hello");
+  },
+});
+Animal.greet();
+```
+
 ## TODOs
 
 This project is still in its early infancy.

@@ -14,15 +14,45 @@ it("generates a newable object", () => {
 
 it("accepts an explicit constructor", () => {
   const Animal = klass({
-    constructor(sound) {
+    constructor(sound, name) {
       this.sound = sound;
+      this.name = name;
     },
     makeSound() {
       return this.sound;
     },
   });
-  const cat = Animal("meow");
+  const cat = Animal("meow", "Fiona");
   expect(cat.makeSound()).toBe("meow");
+  expect(cat.name).toBe("Fiona");
+});
+
+it("makes static fields accessible on klass itself", () => {
+  const Animal = klass({
+    "static greet"() {
+      return "hello";
+    },
+    "static    greet2"() {
+      return "hello again";
+    },
+    "     static greet3    "() {
+      return "yep still me";
+    },
+  });
+  expect(Animal.greet()).toBe("hello");
+  expect(Animal.greet2()).toBe("hello again");
+  expect(Animal.greet3()).toBe("yep still me");
+});
+
+it("removes static fields from instances", () => {
+  const Animal = klass({
+    "static greet"() {
+      return "hello";
+    },
+  });
+  const dog = Animal();
+  expect(Object.keys(dog)).not.toContain("greet");
+  expect(Object.keys(dog)).not.toContain("static greet");
 });
 
 describe("nеw", () => {
