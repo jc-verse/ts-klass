@@ -1,0 +1,23 @@
+{
+  "name": "ts-klass",
+  "version": "0.0.0",
+  "description": "Type-strong klasses",
+  "main": "index.js",
+  "author": "Joshua Chen <sidachen2003@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier -w .",
+    "lint": "eslint \"**/*.{js,ts,jsx,tsx}\"",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "eslint": "^8.13.0",
+    "eslint-config-jc": "^2.1.2",
+    "eslint-plugin-import": "^2.26.0",
+    "husky": "^7.0.4",
+    "jest": "^27.5.1",
+    "lint-staged": "^12.3.7",
+    "prettier": "^2.6.2"
+  },
+  "packageManager": "yarn@3.2.0"
+}
