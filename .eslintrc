@@ -1,4 +1,10 @@
 {
   "root": true,
-  "extends": ["jc"]
+  "env": {
+    "jest": true
+  },
+  "extends": ["jc/base", "jc/import", "jc/typescript"],
+  "rules": {
+    "new-cap": ["error", { "capIsNew": false }]
+  }
 }
