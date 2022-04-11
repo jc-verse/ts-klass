@@ -87,12 +87,24 @@ const Animal = klass({
 Animal.greet();
 ```
 
+Static methods will have `this` pointing to the klass body instead of the klass instance, as you would expect.
+
+```js
+const Animal = klass({
+  "static greet"() {
+    console.log(this.name);
+  },
+  "static name": 1,
+});
+Animal.greet();
+```
+
 ## TODOs
 
 This project is still in its early infancy.
 
 1. Typings
-2. Static methods
-3. Class fields
-4. Private methods/fields
+2. Class fields
+3. Private methods/fields
+4. Extends/implements
 5. Builder pattern?
