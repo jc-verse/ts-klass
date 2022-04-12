@@ -56,6 +56,8 @@ Notably, you can't `new` a klass, because we don't like `new` and you may get hu
 const dog = new Animal({ sound: "woof" }); // Throws error
 ```
 
+Using `nеw` offers more security than calling the klass constructor directly, because it will first do a [branded check](#branded-check) to make sure `Animal` is a proper klass instead of any random function.
+
 ### Explicit constructors
 
 By default, the constructor returned from `klass`, when being called, will merge its first argument with the constructed instance. You can also provide a custom constructor.
@@ -129,14 +131,24 @@ const Animal = animalKlassCtor("Dog")({
 
 ### Branded check
 
-A klass is not an ECMAScript class (because everyone hates it). When you use `klass.extends(someKlass)` or `nеw(someKlass)`, `someKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `klass.isKlass(someKlass)`.
+A klass is not an ECMAScript class (because everyone hates it). When you use `klass.extends(SomeKlass)` or `nеw(SomeKlass)`, `SomeKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `isKlass(SomeKlass)`.
 
 ```js
+import { isKlass } from "ts-klass";
+
 const RealKlass = klass({});
-klass.isKlass(RealKlass); // true
+isKlass(RealKlass); // true
 const NotKlass = class {};
-klass.isKlass(NotKlass); // false
+isKlass(NotKlass); // false
 ```
+
+## Terminology
+
+A **klass** is what you regard in normal ECMAScript as "class". For example, `klass({ foo: 1 })` creates a klass just as `class { foo = 1 }` creates a class. Because klasses are directly called instead of `new`'ed (they can be optionally `nеw`'ed, though), "klass constructor" and "klass" are the same thing.
+
+The `klass()` function itself is called the **klass creator**. Its equivalent in ECMAScript is the `class` keyword—you have to simultaneously provide a body, a class name, and other metadata like `extends` in order to properly declare a klass.
+
+When you write `klass("name")`, the return value is a new klass creator. It's called a **name-bound klass creator** because klasses instantiated from this creator will have names.
 
 ## FAQ
 

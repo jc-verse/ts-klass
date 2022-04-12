@@ -1,30 +1,66 @@
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
-    return function klassWithName(body) {
+    // eslint-disable-next-line func-style
+    const nameBoundKlassCreator = function nameBoundKlassCreator(body) {
       if (typeof body === "string") {
         throw new Error(
-          `The klass already has a name bound as "${bodyOrName}". You can't re-write its name.`,
+          `The klass creator already has a name bound as "${bodyOrName}". You can't re-write its name.`,
         );
       }
-      const aNewKlass = klass(body);
-      Object.defineProperty(aNewKlass, "name", {
+      const NewKlass = klass(body);
+      Object.defineProperty(NewKlass, "name", {
         value: bodyOrName,
-        writable: false,
-        enumerable: false,
         configurable: true,
+        enumerable: false,
+        writable: false,
       });
-      return aNewKlass;
+      return NewKlass;
     };
+    Object.defineProperty(nameBoundKlassCreator, "boundName", {
+      value: bodyOrName,
+      configurable: false,
+      enumerable: true,
+      writable: false,
+    });
+    // nameBoundKlassCreator.extends = extend;
+    return nameBoundKlassCreator;
   }
+  if (typeof bodyOrName !== "object" || !bodyOrName)
+    throw new Error("You can't create a klass with a non-object body.");
   const body = bodyOrName;
-  const { constructor, ...methods } = body;
+  // Ignore existing prototype chain on body
+  Object.setPrototypeOf(body, Object.prototype);
+  const constructor = Object.hasOwn(body, "constructor")
+    ? (() => {
+        const constructor = body.constructor;
+        delete body.constructor;
+        return constructor;
+      })()
+    : function defaultConstructor(props) {
+        if (!props) return;
+        Object.defineProperties(
+          // eslint-disable-next-line @typescript-eslint/no-invalid-this
+          this,
+          Object.fromEntries(
+            Object.keys(props).map((k) => [
+              k,
+              {
+                value: props[k],
+                configurable: true,
+                enumerable: true,
+                writable: true,
+              },
+            ]),
+          ),
+        );
+      };
 
-  const [staticFields] = Object.entries(methods).reduce(
+  const [staticFields] = Object.entries(body).reduce(
     (acc, [key, value]) => {
       const trimmedKey = key.trim();
       if (trimmedKey.startsWith("static ")) {
         acc[0].push([trimmedKey.replace(/^static /, "").trim(), value]);
-        delete methods[key];
+        delete body[key];
       } else {
         acc[1].push([key, value]);
       }
@@ -33,70 +69,65 @@ export default function klass(bodyOrName) {
     [[], []],
   );
 
-  Object.defineProperty(methods, "constructor", {
-    value: newKlass,
-    writable: true,
-    enumerable: false,
-    configurable: true,
-  });
-
-  function newKlass(...args) {
+  function SomeKlass(...args) {
     if (new.target) {
       throw new Error(
         'Please don\'t new a klass, because we hate new. Call it directly or use the "nеw" API.',
       );
     }
-    const instance = Object.create(methods);
-    if (!Object.hasOwn(body, "constructor")) {
-      const props = args[0];
-      if (props) {
-        Object.defineProperties(
-          instance,
-          Object.fromEntries(
-            Object.keys(props).map((k) => [
-              k,
-              {
-                enumerable: true,
-                configurable: true,
-                writable: true,
-                value: props[k],
-              },
-            ]),
-          ),
-        );
-      }
-    } else {
-      constructor.call(instance, ...args);
-    }
+    const instance = Object.create(body);
+    constructor.call(instance, ...args);
     return instance;
   }
+  // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {
-    newKlass[key] = value;
+    SomeKlass[key] = value;
   });
-  Object.defineProperty(newKlass, "name", {
+  // Base name; may be overridden later if the klass creator is called inside a
+  // name-bound one
+  Object.defineProperty(SomeKlass, "name", {
     value: "",
-    writable: false,
-    enumerable: false,
     configurable: true,
+    enumerable: false,
+    writable: false,
   });
-  newKlass[klassMarker] = true;
-  return newKlass;
+  // Reflection: instance.__proto__.constructor
+  Object.defineProperty(body, "constructor", {
+    value: SomeKlass,
+    configurable: true,
+    enumerable: false,
+    writable: true,
+  });
+  // Brand for the newly created klass
+  SomeKlass[klassMarker] = true;
+  return SomeKlass;
 }
 
-// function extend(someKlass) {
-//   if (!klass.isKlass(someKlass))
+// function extend(SuperKlass) {
+//   if (!isKlass(SuperKlass))
 //     throw new Error("You can only extend a klass.");
-//   return function subKlass(bodyOrName) {
-
+//   // eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-invalid-this
+//   const klassCreator = this;
+//   function derivedKlassCreator(body) {
+//     // eslint-disable-next-line @typescript-eslint/no-invalid-this
+//     return function extendedKlass(...args) {
+//       const instance = NewKlass(...args);
+//     };
 //   }
+//   if (klassCreator.boundName)
+//     derivedKlassCreator.boundName = klassCreator.boundName;
+//   derivedKlassCreator.baseKlass = SuperKlass;
+//   return derivedKlassCreator;
 // }
 
-klass.isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
+// klass.extends = extend;
 
 const klassMarker = Symbol("klass");
 
+export const isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
+
 export function nеw(someKlass) {
-  if (!klass.isKlass(someKlass))
+  if (!isKlass(someKlass))
     throw new Error("nеw should only be called on klasses");
   return someKlass;
 }

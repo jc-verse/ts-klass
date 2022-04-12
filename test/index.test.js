@@ -1,7 +1,7 @@
-import klass, { nеw } from "../src/index.js";
+import klass, { nеw, isKlass } from "../src/index.js";
 
 describe("klass constructor", () => {
-  it("generates a newable object", () => {
+  it("can be directly called to construct instances", () => {
     const Animal = klass({
       makeSound() {
         return this.sound;
@@ -11,7 +11,7 @@ describe("klass constructor", () => {
     expect(cat.makeSound()).toBe("meow");
   });
 
-  it("generates a klass without any enumerable keys by default, and resembles normal classes", () => {
+  it("has no enumerable keys by default, and resembles normal classes", () => {
     const Animal = klass({ a: 1 });
     expect(Object.keys(Animal)).toEqual([]);
     expect(Object.getOwnPropertyNames(Animal)).toEqual(
@@ -23,6 +23,20 @@ describe("klass constructor", () => {
     const Animal = klass({ a: 1 });
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
       `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
+    );
+  });
+
+  it("throws if trying to create a klass with a primitive as body", () => {
+    expect(() => klass(1)).toThrowErrorMatchingInlineSnapshot(
+      `"You can't create a klass with a non-object body."`,
+    );
+    expect(() => klass(null)).toThrowErrorMatchingInlineSnapshot(
+      `"You can't create a klass with a non-object body."`,
+    );
+    expect(() =>
+      klass(() => console.log("foo")),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"You can't create a klass with a non-object body."`,
     );
   });
 
@@ -39,6 +53,18 @@ describe("klass constructor", () => {
     const cat = Animal("meow", "Fiona");
     expect(cat.makeSound()).toBe("meow");
     expect(cat.name).toBe("Fiona");
+  });
+
+  it("ignores existing prototypes of body", () => {
+    class RealClass {
+      a = 1;
+    }
+    const KlassClone = klass(new RealClass());
+    const instance = KlassClone();
+    expect(instance.a).toBe(1);
+    expect(Object.getPrototypeOf(Object.getPrototypeOf(instance))).toBe(
+      Object.prototype,
+    );
   });
 });
 
@@ -94,19 +120,23 @@ describe("static field", () => {
 
 describe("name", () => {
   it("allows binding an explicit name", () => {
-    const Animal = klass("Animal")({});
+    const animalKlassCreator = klass("Animal");
+    const Animal = animalKlassCreator({});
     const dog = Animal();
-    expect(klass.isKlass(Animal)).toBe(true);
+    expect(animalKlassCreator.boundName).toBe("Animal");
+    expect(isKlass(Animal)).toBe(true);
     expect(Animal.name).toBe("Animal");
     expect(dog.name).toBe(undefined);
   });
+
   it("falls back to empty string", () => {
     const Animal = klass({});
     expect(Animal.name).toBe("");
   });
+
   it("is forbidden to be re-bound", () => {
     expect(() => klass("foo")("bar")({})).toThrowErrorMatchingInlineSnapshot(
-      `"The klass already has a name bound as \\"foo\\". You can't re-write its name."`,
+      `"The klass creator already has a name bound as \\"foo\\". You can't re-write its name."`,
     );
   });
 });
@@ -121,22 +151,46 @@ describe("name", () => {
 //         return [this.position, this.position];
 //       }
 //     });
-//     expect(Animal.location()).toEqual([1, 1]);
+//     expect(Animal().location()).toEqual([1, 1]);
+//   });
+//   it("can extend a named klass ctor", () => {
+//     const Entity = klass("Entity")({
+//       position: 1,
+//     });
+//     const Animal = klass("Animal").extends(Entity)({
+//       location() {
+//         return [this.position, this.position];
+//       }
+//     });
+//     expect(Animal().location()).toEqual([1, 1]);
+//     expect(Animal.name).toBe("Animal");
+//   });
+//   it("does not take the name from super klass", () => {
+//     const Entity = klass("Entity")({
+//       position: 1,
+//     });
+//     const Animal = klass.extends(Entity)({
+//       location() {
+//         return [this.position, this.position];
+//       }
+//     });
+//     expect(Animal.name).toBe("");
 //   });
 // });
 
 describe("isKlass", () => {
   it("rejects non-klasses", () => {
-    expect(klass.isKlass(class {})).toBe(false);
-    expect(klass.isKlass({})).toBe(false);
+    expect(isKlass(class {})).toBe(false);
+    expect(isKlass({})).toBe(false);
     const Foo = klass({});
-    expect(klass.isKlass(Foo())).toBe(false);
+    expect(isKlass(Foo())).toBe(false);
   });
+
   it("accepts klasses", () => {
     const Foo = klass({});
-    expect(klass.isKlass(Foo)).toBe(true);
+    expect(isKlass(Foo)).toBe(true);
     const Bar = klass({ constructor() {} });
-    expect(klass.isKlass(Bar)).toBe(true);
+    expect(isKlass(Bar)).toBe(true);
   });
 });
 
@@ -149,6 +203,7 @@ describe("nеw", () => {
     });
     expect(nеw(Animal)({ sound: "woof" }).makeSound()).toBe("woof");
   });
+
   it("doesn't new non-klasses", () => {
     const Animal = () => ({
       makeSound() {
