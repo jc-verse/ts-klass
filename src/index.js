@@ -41,6 +41,11 @@ export default function klass(bodyOrName) {
   });
 
   function newKlass(...args) {
+    if (new.target) {
+      throw new Error(
+        'Please don\'t new a klass, because we hate new. Call it directly or use the "nеw" API.',
+      );
+    }
     const instance = Object.create(methods);
     if (!Object.hasOwn(body, "constructor")) {
       const props = args[0];
@@ -74,18 +79,17 @@ export default function klass(bodyOrName) {
     enumerable: false,
     configurable: true,
   });
-  Object.defineProperty(newKlass, "new", { value: newKlass });
   newKlass[klassMarker] = true;
   return newKlass;
 }
 
-// klass.extends = function extend(someKlass) {
+// function extend(someKlass) {
 //   if (!klass.isKlass(someKlass))
 //     throw new Error("You can only extend a klass.");
-//   return function subKlass(proto) {
+//   return function subKlass(bodyOrName) {
 
 //   }
-// };
+// }
 
 klass.isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
 

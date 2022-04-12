@@ -7,19 +7,23 @@ describe("klass constructor", () => {
         return this.sound;
       },
     });
-    const dog = Animal.new({ sound: "woof" });
     const cat = Animal({ sound: "meow" });
-    expect(dog.makeSound()).toBe("woof");
     expect(cat.makeSound()).toBe("meow");
   });
 
   it("generates a klass without any enumerable keys by default, and resembles normal classes", () => {
     const Animal = klass({ a: 1 });
     expect(Object.keys(Animal)).toEqual([]);
-    expect(Object.getOwnPropertyNames(Animal)).toEqual([
-      ...Object.getOwnPropertyNames(class {}),
-      "new",
-    ]);
+    expect(Object.getOwnPropertyNames(Animal)).toEqual(
+      Object.getOwnPropertyNames(class {}),
+    );
+  });
+
+  it("throws if a klass is newed", () => {
+    const Animal = klass({ a: 1 });
+    expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
+      `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
+    );
   });
 
   it("accepts an explicit constructor", () => {
@@ -38,8 +42,8 @@ describe("klass constructor", () => {
   });
 });
 
-describe("static fields", () => {
-  it("are accessible on klass itself", () => {
+describe("static field", () => {
+  it("is accessible on klass itself", () => {
     const Animal = klass({
       "static greet"() {
         return "hello";
@@ -56,18 +60,18 @@ describe("static fields", () => {
     expect(Animal.greet3()).toBe("yep still me");
   });
 
-  it("are removed from instances", () => {
+  it("is removed from instances", () => {
     const Animal = klass({
       "static greet"() {
         return "hello";
       },
     });
     const dog = Animal();
-    expect(Object.keys(dog)).not.toContain("greet");
-    expect(Object.keys(dog)).not.toContain("static greet");
+    expect("greet" in dog).toBe(false);
+    expect("static greet" in dog).toBe(false);
   });
 
-  it("have this pointing to the klass body", () => {
+  it("has this pointing to the klass body", () => {
     const Animal = klass({
       "static greet"() {
         return this.hey;

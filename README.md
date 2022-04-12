@@ -29,13 +29,6 @@ const Animal = klass({
 You can then craft instances from it, as you expect:
 
 ```js
-const dog = Animal.new({ sound: "woof" });
-dog.makeSound();
-```
-
-To save you from your colleagues who grep the word `new` through the entire code base and slaughter those that typed one, you can construct instances without `new` as well:
-
-```js
 const dog = Animal({ sound: "woof" });
 dog.makeSound();
 ```
@@ -57,9 +50,15 @@ dog.makeSound();
 
 Of course, you may need to turn off your editor's highlighting for suspicious characters. If you find `nеw` hard to type, maybe it's time to install a Cyrillic input method.
 
+Notably, you can't `new` a klass, because we don't like `new` and you may get hunted down by your colleagues.
+
+```js
+const dog = new Animal({ sound: "woof" }); // Throws error
+```
+
 ### Explicit constructors
 
-You can also explicitly specify a constructor, instead of using the default, which is a simple property-merge.
+By default, the constructor returned from `klass`, when being called, will merge its first argument with the constructed instance. You can also provide a custom constructor.
 
 ```js
 const Animal = klass({
@@ -76,7 +75,7 @@ cat.makeSound();
 
 ### Static members
 
-You can have static members with... simply adding `static` before the klass declaration.
+You can have static members by... simply adding `static` before the klass declaration.
 
 ```js
 const Animal = klass({
@@ -101,7 +100,7 @@ Animal.greet();
 
 ### Class name
 
-Unfortunately, because we have to follow ECMAScript semantics, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.
+Unfortunately, because `klass` is ultimately a normal ECMAScript function, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.
 
 ```js
 const Animal = klass("Animal")({
@@ -111,11 +110,11 @@ const Animal = klass("Animal")({
 });
 
 const dog = Animal();
-// Logs "A dog is an Animal"
+// Logs "A dog is an Animal."
 console.log(`A dog is an ${dog.constructor.name}.`);
 ```
 
-This can only be done once. After a klass has already been bound to a name, you can't overwrite its name by calling the constructor again. You can't write to it either—following ECMAScript semantics.
+This can only be done once. After a klass has already been bound to a name, you can't overwrite its name by calling the constructor again. You can't assign it either—following ECMAScript semantics.
 
 ```js
 const animalKlassCtor = klass("Animal");
