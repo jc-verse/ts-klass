@@ -13,6 +13,15 @@ describe("klass constructor", () => {
     expect(cat.makeSound()).toBe("meow");
   });
 
+  it("generates a klass without any enumerable keys by default, and resembles normal classes", () => {
+    const Animal = klass({ a: 1 });
+    expect(Object.keys(Animal)).toEqual([]);
+    expect(Object.getOwnPropertyNames(Animal)).toEqual([
+      ...Object.getOwnPropertyNames(class {}),
+      "new",
+    ]);
+  });
+
   it("accepts an explicit constructor", () => {
     const Animal = klass({
       constructor(sound, name) {

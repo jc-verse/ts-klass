@@ -143,7 +143,7 @@ klass.isKlass(NotKlass); // false
 
 ### Why does using this module result in a runtime error?
 
-Although this sounds like an idea from the dinosaurs, this module uses the latest JS features. For example, `Object.hasOwn` is [only available in Node v16.10+](https://node.green/#ES2022-features-Object-hasOwn). If you are using it in browser, you almost always want to polyfill certain APIs.
+Although this sounds like an idea from the age of dinosaurs, this module actually uses the latest JS features. For example, `Object.hasOwn` is [only available in Node v16.10+](https://node.green/#ES2022-features-Object-hasOwn). If you are using it in browser, you almost always want to polyfill certain APIs.
 
 Also, this module is literally a _module_: it uses ECMAScript modules (ESM) instead of CommonJS (CJS) ones. You need to import it with `import klass from "ts-klass"` instead of `const klass = require("klass")`.
 

@@ -1,10 +1,11 @@
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
     return function klassWithName(body) {
-      if (typeof body === "string")
-        {throw new Error(
+      if (typeof body === "string") {
+        throw new Error(
           `The klass already has a name bound as "${bodyOrName}". You can't re-write its name.`,
-        );}
+        );
+      }
       const aNewKlass = klass(body);
       Object.defineProperty(aNewKlass, "name", {
         value: bodyOrName,
@@ -32,6 +33,13 @@ export default function klass(bodyOrName) {
     [[], []],
   );
 
+  Object.defineProperty(methods, "constructor", {
+    value: newKlass,
+    writable: true,
+    enumerable: false,
+    configurable: true,
+  });
+
   function newKlass(...args) {
     const instance = Object.create(methods);
     if (!Object.hasOwn(body, "constructor")) {
@@ -55,12 +63,6 @@ export default function klass(bodyOrName) {
     } else {
       constructor.call(instance, ...args);
     }
-    Object.defineProperty(methods, "constructor", {
-      value: newKlass,
-      writable: true,
-      enumerable: false,
-      configurable: true,
-    });
     return instance;
   }
   staticFields.forEach(([key, value]) => {
