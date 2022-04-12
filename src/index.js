@@ -15,7 +15,7 @@ export default function klass(proto) {
     [[], []],
   );
 
-  function _klass(...args) {
+  function newKlass(...args) {
     const instance = Object.create(methods);
     if (!Object.hasOwn(proto, "constructor")) {
       const props = args[0];
@@ -38,20 +38,38 @@ export default function klass(proto) {
     } else {
       constructor.call(instance, ...args);
     }
+    Object.defineProperty(methods, "constructor", {
+      value: newKlass,
+      writable: true,
+      enumerable: false,
+      configurable: true,
+    });
     return instance;
   }
   staticFields.forEach(([key, value]) => {
-    _klass[key] = value;
+    newKlass[key] = value;
   });
-  _klass.new = _klass;
-  _klass[klassMarker] = true;
-  return _klass;
+  Object.defineProperty(newKlass, "new", { value: newKlass });
+  newKlass[klassMarker] = true;
+  return newKlass;
 }
+
+// klass.extends = function extend(someKlass) {
+//   if (!klass.isKlass(someKlass))
+//     throw new Error("You can only extend a klass.");
+//   return function subKlass(proto) {
+
+//   }
+// };
+
+klass.isKlass = function isKlass(maybeKlass) {
+  return Boolean(maybeKlass[klassMarker]);
+};
 
 const klassMarker = Symbol("klass");
 
 export function nеw(someKlass) {
-  if (!someKlass[klassMarker])
+  if (!klass.isKlass(someKlass))
     throw new Error("nеw should only be called on klasses");
   return someKlass;
 }

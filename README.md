@@ -99,6 +99,17 @@ const Animal = klass({
 Animal.greet();
 ```
 
+### Branded check
+
+A klass is not a class. When you use `klass.extends(someKlass)` or `nеw(someKlass)`, `someKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `klass.isKlass(someKlass)`.
+
+```js
+const RealKlass = klass({});
+klass.isKlass(RealKlass); // true
+const NotKlass = class {};
+klass.isKlass(NotKlass); // false
+```
+
 ## TODOs
 
 This project is still in its early infancy.

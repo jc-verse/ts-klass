@@ -67,7 +67,31 @@ describe("static fields", () => {
     });
     expect(Animal.greet()).toBe(1);
   });
+
+  it("can be retrieved through constructor reflection on instance", () => {
+    const Animal = klass({
+      "static greet"() {
+        return "Hi";
+      },
+    });
+    const dog = Animal();
+    expect(dog.constructor).toBe(Animal);
+  });
 });
+
+// describe("extends", () => {
+//   it("adds extra properties from the base klass", () => {
+//     const Entity = klass({
+//       position: 1,
+//     });
+//     const Animal = klass.extends(Entity)({
+//       location() {
+//         return [this.position, this.position];
+//       }
+//     });
+//     expect(Animal.location()).toEqual([1, 1]);
+//   });
+// });
 
 describe("nеw", () => {
   it("yes, it nеws", () => {
