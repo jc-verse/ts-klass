@@ -79,6 +79,25 @@ describe("static fields", () => {
   });
 });
 
+describe("name", () => {
+  it("allows binding an explicit name", () => {
+    const Animal = klass("Animal")({});
+    const dog = Animal();
+    expect(klass.isKlass(Animal)).toBe(true);
+    expect(Animal.name).toBe("Animal");
+    expect(dog.name).toBe(undefined);
+  });
+  it("falls back to empty string", () => {
+    const Animal = klass({});
+    expect(Animal.name).toBe("");
+  });
+  it("is forbidden to be re-bound", () => {
+    expect(() => klass("foo")("bar")({})).toThrowErrorMatchingInlineSnapshot(
+      `"The klass already has a name bound as \\"foo\\". You can't re-write its name."`,
+    );
+  });
+});
+
 // describe("extends", () => {
 //   it("adds extra properties from the base klass", () => {
 //     const Entity = klass({
@@ -92,6 +111,21 @@ describe("static fields", () => {
 //     expect(Animal.location()).toEqual([1, 1]);
 //   });
 // });
+
+describe("isKlass", () => {
+  it("rejects non-klasses", () => {
+    expect(klass.isKlass(class {})).toBe(false);
+    expect(klass.isKlass({})).toBe(false);
+    const Foo = klass({});
+    expect(klass.isKlass(Foo())).toBe(false);
+  });
+  it("accepts klasses", () => {
+    const Foo = klass({});
+    expect(klass.isKlass(Foo)).toBe(true);
+    const Bar = klass({ constructor() {} });
+    expect(klass.isKlass(Bar)).toBe(true);
+  });
+});
 
 describe("nеw", () => {
   it("yes, it nеws", () => {

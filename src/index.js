@@ -1,5 +1,22 @@
-export default function klass(proto) {
-  const { constructor, ...methods } = proto;
+export default function klass(bodyOrName) {
+  if (typeof bodyOrName === "string") {
+    return function klassWithName(body) {
+      if (typeof body === "string")
+        {throw new Error(
+          `The klass already has a name bound as "${bodyOrName}". You can't re-write its name.`,
+        );}
+      const aNewKlass = klass(body);
+      Object.defineProperty(aNewKlass, "name", {
+        value: bodyOrName,
+        writable: false,
+        enumerable: false,
+        configurable: true,
+      });
+      return aNewKlass;
+    };
+  }
+  const body = bodyOrName;
+  const { constructor, ...methods } = body;
 
   const [staticFields] = Object.entries(methods).reduce(
     (acc, [key, value]) => {
@@ -17,7 +34,7 @@ export default function klass(proto) {
 
   function newKlass(...args) {
     const instance = Object.create(methods);
-    if (!Object.hasOwn(proto, "constructor")) {
+    if (!Object.hasOwn(body, "constructor")) {
       const props = args[0];
       if (props) {
         Object.defineProperties(
@@ -49,6 +66,12 @@ export default function klass(proto) {
   staticFields.forEach(([key, value]) => {
     newKlass[key] = value;
   });
+  Object.defineProperty(newKlass, "name", {
+    value: "",
+    writable: false,
+    enumerable: false,
+    configurable: true,
+  });
   Object.defineProperty(newKlass, "new", { value: newKlass });
   newKlass[klassMarker] = true;
   return newKlass;
@@ -62,9 +85,7 @@ export default function klass(proto) {
 //   }
 // };
 
-klass.isKlass = function isKlass(maybeKlass) {
-  return Boolean(maybeKlass[klassMarker]);
-};
+klass.isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
 
 const klassMarker = Symbol("klass");
 

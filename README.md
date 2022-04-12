@@ -99,6 +99,31 @@ const Animal = klass({
 Animal.greet();
 ```
 
+### Class name
+
+Unfortunately, because we have to follow ECMAScript semantics, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.
+
+```js
+const Animal = klass("Animal")({
+  makeSound() {
+    console.log(this.sound);
+  },
+});
+```
+
+This can only be done once. After a klass has already been bound to a name, you can't overwrite its name by calling the constructor again. You can't write to it either—following ECMAScript semantics.
+
+```js
+const animalKlassCtor = klass("Animal");
+
+const Animal = animalKlassCtor("Dog")({
+  // Won't work; throws error ^^^^^^^
+  makeSound() {
+    console.log(this.sound);
+  },
+});
+```
+
 ### Branded check
 
 A klass is not a class. When you use `klass.extends(someKlass)` or `nеw(someKlass)`, `someKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `klass.isKlass(someKlass)`.
