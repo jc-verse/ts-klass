@@ -109,6 +109,10 @@ const Animal = klass("Animal")({
     console.log(this.sound);
   },
 });
+
+const dog = Animal();
+// Logs "A dog is an Animal"
+console.log(`A dog is an ${dog.constructor.name}.`);
 ```
 
 This can only be done once. After a klass has already been bound to a name, you can't overwrite its name by calling the constructor again. You can't write to it either—following ECMAScript semantics.
@@ -126,7 +130,7 @@ const Animal = animalKlassCtor("Dog")({
 
 ### Branded check
 
-A klass is not a class. When you use `klass.extends(someKlass)` or `nеw(someKlass)`, `someKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `klass.isKlass(someKlass)`.
+A klass is not an ECMAScript class (because everyone hates it). When you use `klass.extends(someKlass)` or `nеw(someKlass)`, `someKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `klass.isKlass(someKlass)`.
 
 ```js
 const RealKlass = klass({});
@@ -135,12 +139,26 @@ const NotKlass = class {};
 klass.isKlass(NotKlass); // false
 ```
 
+## FAQ
+
+### Why does using this module result in a runtime error?
+
+Although this sounds like an idea from the dinosaurs, this module uses the latest JS features. For example, `Object.hasOwn` is [only available in Node v16.10+](https://node.green/#ES2022-features-Object-hasOwn). If you are using it in browser, you almost always want to polyfill certain APIs.
+
+Also, this module is literally a _module_: it uses ECMAScript modules (ESM) instead of CommonJS (CJS) ones. You need to import it with `import klass from "ts-klass"` instead of `const klass = require("klass")`.
+
+### Can I use this in production?
+
+If I haven't made it clear enough—please don't. A klass has much worse performance than a native class while offering all the semantics and paradigms that classes do offer. If your team wants to enforce functional programming style, please do realize that composition is a fundamentally different approach than inheritance, which klasses are built upon.
+
+Still, this module has been fully tested and follows ECMAScript semantics (where applicable) to the best of our knowledge, so it should not be _dangerous_ to use, per se.
+
 ## TODOs
 
 This project is still in its early infancy.
 
 1. Typings
-2. Class fields
-3. Private methods/fields
-4. Extends/implements
+2. Private methods/fields
+3. Extends/implements
+4. Abstract classes
 5. Builder pattern?
