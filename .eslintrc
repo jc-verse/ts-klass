@@ -5,6 +5,33 @@
   },
   "extends": ["jc/base", "jc/import", "jc/typescript"],
   "rules": {
-    "new-cap": ["error", { "capIsNew": false }]
+    "new-cap": ["error", { "capIsNew": false }],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "message": "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
+        "selector": "ForInStatement"
+      },
+      {
+        "message": "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
+        "selector": "LabeledStatement"
+      },
+      {
+        "message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
+        "selector": "WithStatement"
+      },
+      {
+        "message": "Export all does't work well if imported in ESM due to how they are transpiled, and they can also lead to unexpected exposure of internal methods.",
+        "selector": "ExportAllDeclaration"
+      },
+      {
+        "message": "We hate new.",
+        "selector": "NewExpression:not(:has(Identifier[name=Error]))"
+      },
+      {
+        "message": "We hate classes.",
+        "selector": "ClassDeclaration, ClassExpression"
+      }
+    ]
   }
 }

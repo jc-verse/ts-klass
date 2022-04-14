@@ -15,12 +15,14 @@ describe("klass constructor", () => {
     const Animal = klass({ a: 1 });
     expect(Object.keys(Animal)).toEqual([]);
     expect(Object.getOwnPropertyNames(Animal)).toEqual(
+      // eslint-disable-next-line no-restricted-syntax
       Object.getOwnPropertyNames(class {}),
     );
   });
 
   it("throws if a klass is newed", () => {
     const Animal = klass({ a: 1 });
+    // eslint-disable-next-line no-restricted-syntax
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
       `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
     );
@@ -55,10 +57,24 @@ describe("klass constructor", () => {
     expect(cat.name).toBe("Fiona");
   });
 
+  it("assigns prototype correctly", () => {
+    const Animal = klass({
+      makeSound() {
+        return this.sound;
+      },
+    });
+    const cat = Animal({ sound: "meow" });
+    expect(Object.hasOwn(cat, "sound")).toBe(true);
+    expect(Object.hasOwn(cat, "makeSound")).toBe(false);
+    expect(Object.hasOwn(Object.getPrototypeOf(cat), "makeSound")).toBe(true);
+  });
+
   it("ignores existing prototypes of body", () => {
+    // eslint-disable-next-line no-restricted-syntax
     class RealClass {
       a = 1;
     }
+    // eslint-disable-next-line no-restricted-syntax
     const KlassClone = klass(new RealClass());
     const instance = KlassClone();
     expect(instance.a).toBe(1);
@@ -180,6 +196,7 @@ describe("name", () => {
 
 describe("isKlass", () => {
   it("rejects non-klasses", () => {
+    // eslint-disable-next-line no-restricted-syntax
     expect(isKlass(class {})).toBe(false);
     expect(isKlass({})).toBe(false);
     const Foo = klass({});

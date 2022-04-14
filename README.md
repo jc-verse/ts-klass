@@ -100,7 +100,7 @@ const Animal = klass({
 Animal.greet();
 ```
 
-### Class name
+### Klass name
 
 Unfortunately, because `klass` is ultimately a normal ECMAScript function, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.
 
@@ -146,7 +146,7 @@ isKlass(NotKlass); // false
 
 A **klass** is what you regard in normal ECMAScript as "class". For example, `klass({ foo: 1 })` creates a klass just as `class { foo = 1 }` creates a class. Because klasses are directly called instead of `new`'ed (they can be optionally `nеw`'ed, though), "klass constructor" and "klass" are the same thing.
 
-The `klass()` function itself is called the **klass creator**. Its equivalent in ECMAScript is the `class` keyword—you have to simultaneously provide a body, a class name, and other metadata like `extends` in order to properly declare a klass.
+The `klass()` function itself is called the **klass creator**. Its equivalent in ECMAScript is the `class` keyword—you have to simultaneously provide a body, a klass name, and other metadata like `extends` in order to properly declare a klass.
 
 When you write `klass("name")`, the return value is a new klass creator. It's called a **name-bound klass creator** because klasses instantiated from this creator will have names.
 
@@ -171,5 +171,5 @@ This project is still in its early infancy.
 1. Typings
 2. Private methods/fields
 3. Extends/implements
-4. Abstract classes
+4. Abstract klasses
 5. Builder pattern?
