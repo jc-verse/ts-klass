@@ -5,26 +5,31 @@ type Static<T extends object> = Pick<T, StaticKeys<keyof T>> extends infer U
   ? { [K in keyof U as StripStatic<K>]: U[K] }
   : never;
 
-type Instance<T extends object> = T;
+type Instance<T extends object> = Omit<T, StaticKeys<keyof T>>;
 
 declare const klassMarker: unique symbol;
 
-type Klass<T extends object> = Static<T> &
-  (<U extends object>(props?: U) => Instance<T> & U) & {
+type Klass<Body extends object> = Static<Body> &
+  (<U extends object>(props?: U & ThisType<any>) => Instance<Body> & U) & {
     [klassMarker]: true;
   };
 
-type KlassWithCtor<T extends { constructor: (...args: never) => void }> =
-  Static<T> &
-    ((...args: Parameters<T["constructor"]>) => Instance<T>) & {
+type KlassWithCtor<Body extends { constructor: (...args: never) => void }> =
+  Static<Body> &
+    ((
+      this: any,
+      ...args: Parameters<Body["constructor"]>
+    ) => Instance<Body>) & {
       [klassMarker]: true;
     };
 
 declare function klass(name: string): typeof klass & { boundName: string };
-declare function klass<T extends { constructor: (...args: never) => void }>(
-  proto: T,
-): KlassWithCtor<T>;
-declare function klass<T extends object>(proto: T): Klass<T>;
+declare function klass<Body extends { constructor: (...args: never) => void }>(
+  body: Body & ThisType<any>,
+): KlassWithCtor<Body>;
+declare function klass<Body extends object>(
+  body: Body & ThisType<any>,
+): Klass<Body>;
 
 export function nеw<T extends Klass<object>>(someKlass: T): T;
 export function isKlass(maybeKlass: unknown): maybeKlass is Klass<object>;
