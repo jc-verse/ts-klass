@@ -1,3 +1,5 @@
+// @ts-check
+
 import klass, { nеw, isKlass } from "../src/index.js";
 
 describe("klass constructor", () => {
@@ -22,6 +24,7 @@ describe("klass constructor", () => {
 
   it("throws if a klass is newed", () => {
     const Animal = klass({ a: 1 });
+    // @ts-expect-error: for testing
     // eslint-disable-next-line no-restricted-syntax
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
       `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
@@ -29,6 +32,7 @@ describe("klass constructor", () => {
   });
 
   it("throws if trying to create a klass with a primitive as body", () => {
+    // @ts-expect-error: for testing
     expect(() => klass(1)).toThrowErrorMatchingInlineSnapshot(
       `"You can't create a klass with a non-object body."`,
     );
@@ -44,6 +48,10 @@ describe("klass constructor", () => {
 
   it("accepts an explicit constructor", () => {
     const Animal = klass({
+      /**
+       * @param {string} sound
+       * @param {string} name
+       */
       constructor(sound, name) {
         this.sound = sound;
         this.name = name;
@@ -98,7 +106,9 @@ describe("static field", () => {
       },
     });
     expect(Animal.greet()).toBe("hello");
+    // @ts-expect-error: this is not worth typing, but it's supported
     expect(Animal.greet2()).toBe("hello again");
+    // @ts-expect-error: this is not worth typing, but it's supported
     expect(Animal.greet3()).toBe("yep still me");
   });
 
@@ -142,7 +152,7 @@ describe("name", () => {
     expect(animalKlassCreator.boundName).toBe("Animal");
     expect(isKlass(Animal)).toBe(true);
     expect(Animal.name).toBe("Animal");
-    expect(dog.name).toBe(undefined);
+    expect("name" in dog).toBe(false);
   });
 
   it("falls back to empty string", () => {
@@ -228,6 +238,7 @@ describe("nеw", () => {
       },
     });
     expect(() =>
+      // @ts-expect-error: for testing
       nеw(Animal)({ sound: "woof" }),
     ).toThrowErrorMatchingInlineSnapshot(
       `"nеw should only be called on klasses"`,

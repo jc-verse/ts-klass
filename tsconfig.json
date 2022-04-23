@@ -1,0 +1,7 @@
+{
+  "extends": "tsconfig-jc",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["jest", "node"]
+  }
+}

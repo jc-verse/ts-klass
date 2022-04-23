@@ -1,4 +1,1 @@
-{
-  "bracketSameLine": true,
-  "trailingComma": "all"
-}
+"prettier-config-jc"
