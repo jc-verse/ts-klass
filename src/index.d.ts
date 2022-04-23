@@ -10,16 +10,18 @@ type Instance<T extends object> = Omit<T, StaticKeys<keyof T>>;
 declare const klassMarker: unique symbol;
 
 type Klass<Body extends object> = Static<Body> &
-  (<U extends object>(props?: U & ThisType<any>) => Instance<Body> & U) & {
+  (<U extends object>(
+    props?: U & ThisType<Instance<Body>>,
+  ) => Instance<Body> & U) & {
     [klassMarker]: true;
   };
 
 type KlassWithCtor<Body extends { constructor: (...args: never) => void }> =
   Static<Body> &
     ((
-      this: any,
+      this: ThisParameterType<Body["constructor"] & Instance<Body>>,
       ...args: Parameters<Body["constructor"]>
-    ) => Instance<Body>) & {
+    ) => Instance<Body> & ThisParameterType<Body["constructor"]>) & {
       [klassMarker]: true;
     };
 

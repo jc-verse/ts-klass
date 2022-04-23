@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Type-strong klasses",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "author": "Joshua Chen <sidachen2003@gmail.com>",
   "license": "MIT",
   "type": "module",

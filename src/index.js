@@ -1,7 +1,7 @@
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
     // eslint-disable-next-line func-style
-    const nameBoundKlassCreator = function nameBoundKlassCreator(body) {
+    const nameBoundKlassCreator = (body) => {
       if (typeof body === "string") {
         throw new Error(
           `The klass creator already has a name bound as "${bodyOrName}". You can't re-write its name.`,
