@@ -90,6 +90,18 @@ describe("klass constructor", () => {
       Object.prototype,
     );
   });
+
+  it("can be checked with instanceof", () => {
+    const Animal = klass("Animal")({});
+    expect(Animal instanceof klass).toBe(true);
+    expect(Animal instanceof Function).toBe(true);
+    expect(Animal instanceof Object).toBe(true);
+    const cat = Animal();
+    expect(cat instanceof Animal).toBe(true);
+    expect(cat instanceof Function).toBe(false);
+    expect(cat instanceof Object).toBe(true);
+    console.log(String(cat));
+  });
 });
 
 describe("static field", () => {

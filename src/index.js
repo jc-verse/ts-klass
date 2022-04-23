@@ -98,6 +98,10 @@ export default function klass(bodyOrName) {
     enumerable: false,
     writable: true,
   });
+  // instance instanceof SomeKlass
+  Object.defineProperty(SomeKlass, Symbol.hasInstance, {
+    value: (someInstance) => someInstance.constructor === SomeKlass,
+  });
   // Brand for the newly created klass
   SomeKlass[klassMarker] = true;
   return SomeKlass;
@@ -123,6 +127,10 @@ export default function klass(bodyOrName) {
 // klass.extends = extend;
 
 const klassMarker = Symbol("klass");
+
+Object.defineProperty(klass, Symbol.hasInstance, {
+  value: (maybeKlass) => Boolean(maybeKlass[klassMarker]),
+});
 
 export const isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
 

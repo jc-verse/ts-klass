@@ -142,6 +142,12 @@ const NotKlass = class {};
 isKlass(NotKlass); // false
 ```
 
+You can also use `instanceof` to do branded checks.
+
+```js
+RealKlass instanceof klass; // true
+```
+
 ## Terminology
 
 A **klass** is what you regard in normal ECMAScript as "class". For example, `klass({ foo: 1 })` creates a klass just as `class { foo = 1 }` creates a class. Because klasses are directly called instead of `new`'ed (they can be optionally `nеw`'ed, though), "klass constructor" and "klass" are the same thing.
