@@ -1,12 +1,19 @@
 {
   "name": "ts-klass",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Type-strong klasses",
   "main": "src/index.js",
   "types": "src/index.d.ts",
   "author": "Joshua Chen <sidachen2003@gmail.com>",
   "license": "MIT",
   "type": "module",
+  "keywords": [
+    "class",
+    "utility"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "scripts": {
     "format": "prettier -w .",
     "lint": "eslint \"**/*.{js,ts,jsx,tsx}\"",
