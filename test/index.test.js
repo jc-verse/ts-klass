@@ -100,7 +100,6 @@ describe("klass constructor", () => {
     expect(cat instanceof Animal).toBe(true);
     expect(cat instanceof Function).toBe(false);
     expect(cat instanceof Object).toBe(true);
-    console.log(String(cat));
   });
 });
 

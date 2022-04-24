@@ -28,8 +28,6 @@ export default function klass(bodyOrName) {
   if (typeof bodyOrName !== "object" || !bodyOrName)
     throw new Error("You can't create a klass with a non-object body.");
   const body = bodyOrName;
-  // Ignore existing prototype chain on body
-  Object.setPrototypeOf(body, Object.prototype);
   const constructor = Object.hasOwn(body, "constructor")
     ? (() => {
         const constructor = body.constructor;
@@ -55,7 +53,7 @@ export default function klass(bodyOrName) {
         );
       };
 
-  const [staticFields] = Object.entries(body).reduce(
+  const [staticFields, instanceFields] = Object.entries(body).reduce(
     (acc, [key, value]) => {
       const trimmedKey = key.trim();
       if (trimmedKey.startsWith("static ")) {
@@ -75,13 +73,17 @@ export default function klass(bodyOrName) {
         'Please don\'t new a klass, because we hate new. Call it directly or use the "nеw" API.',
       );
     }
-    const instance = Object.create(body);
+    const instance = Object.create(SomeKlass.prototype);
     constructor.call(instance, ...args);
     return instance;
   }
   // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {
     SomeKlass[key] = value;
+  });
+  // Instance fields are defined on constructor.prototype
+  instanceFields.forEach(([key, value]) => {
+    SomeKlass.prototype[key] = value;
   });
   // Base name; may be overridden later if the klass creator is called inside a
   // name-bound one
@@ -90,17 +92,6 @@ export default function klass(bodyOrName) {
     configurable: true,
     enumerable: false,
     writable: false,
-  });
-  // Reflection: instance.__proto__.constructor
-  Object.defineProperty(body, "constructor", {
-    value: SomeKlass,
-    configurable: true,
-    enumerable: false,
-    writable: true,
-  });
-  // instance instanceof SomeKlass
-  Object.defineProperty(SomeKlass, Symbol.hasInstance, {
-    value: (someInstance) => someInstance.constructor === SomeKlass,
   });
   // Brand for the newly created klass
   SomeKlass[klassMarker] = true;
