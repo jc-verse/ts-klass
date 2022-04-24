@@ -16,7 +16,7 @@ describe("klass constructor", () => {
 
   it("has no enumerable keys by default, and resembles normal classes", () => {
     const Animal = klass({ a: 1 });
-    expect(Object.keys(Animal)).toEqual([]);
+    expect(Object.keys(Animal)).toEqual(Object.keys(class {}));
     expect(Object.getOwnPropertyNames(Animal)).toEqual(
       Object.getOwnPropertyNames(class {}),
     );
@@ -64,60 +64,122 @@ describe("klass constructor", () => {
     expect(cat.name).toBe("Fiona");
   });
 
-  it("assigns prototype correctly", () => {
-    const Animal = klass({
-      makeSound() {
-        return this.sound;
-      },
+  describe("assigns prototype correctly", () => {
+    test("klass", () => {
+      const Animal = klass({
+        makeSound() {
+          return this.sound;
+        },
+      });
+      const cat = Animal({ sound: "meow" });
+      expect(Object.hasOwn(cat, "sound")).toBe(true);
+      expect(Object.hasOwn(cat, "makeSound")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(cat), "makeSound")).toBe(true);
     });
-    const cat = Animal({ sound: "meow" });
-    expect(Object.hasOwn(cat, "sound")).toBe(true);
-    expect(Object.hasOwn(cat, "makeSound")).toBe(false);
-    expect(Object.hasOwn(Object.getPrototypeOf(cat), "makeSound")).toBe(true);
+
+    test("class", () => {
+      const Animal = class {
+        sound = "meow";
+        makeSound() {
+          return this.sound;
+        }
+      };
+      const cat = new Animal();
+      expect(Object.hasOwn(cat, "sound")).toBe(true);
+      expect(Object.hasOwn(cat, "makeSound")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(cat), "makeSound")).toBe(true);
+    });
   });
 
-  it("ignores existing prototypes of body", () => {
+  describe("ignores existing prototypes of body", () => {
+    // Fastest way to make something with an existing prototype
     class RealClass {
       a = 1;
+      foo() {}
     }
-    const KlassClone = klass(new RealClass());
-    const instance = KlassClone();
-    expect(instance.a).toBe(1);
-    expect(Object.getPrototypeOf(Object.getPrototypeOf(instance))).toBe(
-      Object.prototype,
-    );
-  });
-
-  it("can be checked with instanceof", () => {
-    const Animal = klass("Animal")({});
-    expect(Animal instanceof klass).toBe(true);
-    expect(Animal instanceof Function).toBe(true);
-    expect(Animal instanceof Object).toBe(true);
-    const cat = Animal();
-    expect(cat instanceof Animal).toBe(true);
-    expect(cat instanceof Function).toBe(false);
-    expect(cat instanceof Object).toBe(true);
-  });
-
-  it("can be retrieved through constructor reflection on instance", () => {
-    const Animal = klass({});
-    const dog = Animal();
-    expect(dog.constructor).toBe(Animal);
-  });
-
-  it("has correct length value", () => {
-    const Animal = klass({});
-    expect(Animal.length).toBe(1);
-    const Animal2 = klass({
-      constructor() {},
+    test("klass", () => {
+      const KlassClone = klass(new RealClass());
+      const instance = KlassClone();
+      expect(instance.a).toBe(1);
+      expect("foo" in instance).toBe(false);
+      expect(Object.getPrototypeOf(Object.getPrototypeOf(instance))).toBe(
+        Object.prototype,
+      );
     });
-    expect(Animal2.length).toBe(0);
-    const Animal3 = klass({
-      constructor(foo, bar) {
-        console.log(foo, bar);
-      },
+
+    test("class", () => {
+      const instance = new RealClass();
+      expect(Object.getPrototypeOf(Object.getPrototypeOf(instance))).toBe(
+        Object.prototype,
+      );
     });
-    expect(Animal3.length).toBe(2);
+  });
+
+  describe("can be checked with instanceof", () => {
+    test("klass", () => {
+      const Animal = klass({});
+      const cat = Animal();
+      expect(cat instanceof Animal).toBe(true);
+      expect(cat instanceof Function).toBe(false);
+      expect(cat instanceof Object).toBe(true);
+    });
+
+    test("class", () => {
+      const Animal = class {};
+      const cat = new Animal();
+      expect(cat instanceof Animal).toBe(true);
+      expect(cat instanceof Function).toBe(false);
+      expect(cat instanceof Object).toBe(true);
+    });
+  });
+
+  describe("can be retrieved through constructor of instance", () => {
+    test("klass", () => {
+      const Animal = klass({});
+      const dog = Animal();
+      expect(dog.constructor).toBe(Animal);
+    });
+
+    test("class", () => {
+      const Animal = class {};
+      const dog = new Animal();
+      expect(dog.constructor).toBe(Animal);
+    });
+  });
+
+  describe("has correct length value", () => {
+    test("klass", () => {
+      const Animal = klass({});
+      expect(Animal.length).toBe(1);
+      const Animal2 = klass({
+        constructor() {},
+      });
+      expect(Animal2.length).toBe(0);
+      const Animal3 = klass({
+        constructor(foo, bar) {
+          console.log(foo, bar);
+        },
+      });
+      expect(Animal3.length).toBe(2);
+    });
+
+    test("class", () => {
+      // class {} is a special case, because we provide a default constructor
+      // Not adding a conformance test for it
+
+      const Animal2 = class {
+        constructor() {
+          console.log("foo");
+        }
+      };
+      expect(Animal2.length).toBe(0);
+      const Animal3 = class {
+        constructor(foo, bar) {
+          console.log(foo, bar);
+        }
+      };
+      expect(Animal3.length).toBe(2);
+    });
   });
 });
 
@@ -141,42 +203,82 @@ describe("static field", () => {
     expect(Animal.greet3()).toBe("yep still me");
   });
 
-  it("is removed from instances", () => {
-    const Animal = klass({
-      "static greet"() {
-        return "hello";
-      },
+  describe("is removed from instances", () => {
+    test("klass", () => {
+      const Animal = klass({
+        "static greet"() {
+          return "hello";
+        },
+      });
+      const dog = Animal();
+      expect("greet" in dog).toBe(false);
+      expect("static greet" in dog).toBe(false);
     });
-    const dog = Animal();
-    expect("greet" in dog).toBe(false);
-    expect("static greet" in dog).toBe(false);
+
+    test("class", () => {
+      const Animal = class {
+        static greet() {
+          return "hello";
+        }
+      };
+      const dog = new Animal();
+      expect("greet" in dog).toBe(false);
+    });
   });
 
-  it("has this pointing to the klass body", () => {
-    const Animal = klass({
-      "static greet"() {
-        return this.hey;
-      },
-      "static hey": 1,
+  describe("has this pointing to the klass body", () => {
+    test("klass", () => {
+      const Animal = klass({
+        "static greet"() {
+          return this.hey;
+        },
+        "static hey": 1,
+      });
+      expect(Animal.greet()).toBe(1);
     });
-    expect(Animal.greet()).toBe(1);
+
+    test("class", () => {
+      const Animal = class {
+        static greet() {
+          return this.hey;
+        }
+        static hey = 1;
+      };
+      expect(Animal.greet()).toBe(1);
+    });
   });
 });
 
 describe("name", () => {
-  it("allows binding an explicit name", () => {
-    const animalKlassCreator = klass("Animal");
-    const Animal = animalKlassCreator({});
-    const dog = Animal();
-    expect(animalKlassCreator.boundName).toBe("Animal");
-    expect(isKlass(Animal)).toBe(true);
-    expect(Animal.name).toBe("Animal");
-    expect("name" in dog).toBe(false);
+  describe("allows binding an explicit name", () => {
+    test("klass", () => {
+      const animalKlassCreator = klass("Animal");
+      const Animal = animalKlassCreator({});
+      const dog = Animal();
+      expect(animalKlassCreator.boundName).toBe("Animal");
+      expect(isKlass(Animal)).toBe(true);
+      expect(Animal.name).toBe("Animal");
+      expect("name" in dog).toBe(false);
+    });
+
+    test("class", () => {
+      const Animal = class {};
+      const dog = new Animal();
+      expect(Animal.name).toBe("Animal");
+      expect("name" in dog).toBe(false);
+    });
   });
 
-  it("falls back to empty string", () => {
-    const Animal = klass({});
-    expect(Animal.name).toBe("");
+  describe("falls back to empty string", () => {
+    test("klass", () => {
+      const Animal = klass({});
+      expect(Animal.name).toBe("");
+    });
+
+    test("class", () => {
+      const Animal = (() => class {})();
+      expect(Animal.name).toBe("");
+    });
   });
 
   it("is forbidden to be re-bound", () => {
@@ -186,10 +288,27 @@ describe("name", () => {
     );
   });
 
-  it("overrides default @@toStringTag", () => {
-    const Animal = klass("Animal")({});
-    const dog = Animal();
-    expect(String(dog)).toBe("[object Animal]");
+  describe("overrides default @@toStringTag", () => {
+    test("klass", () => {
+      const Animal = klass("Animal")({});
+      const dog = Animal();
+      expect(String(dog)).toBe("[object Animal]");
+
+      const NamelessAnimal = klass({});
+      const namelessDog = NamelessAnimal();
+      expect(String(namelessDog)).toBe("[object Object]");
+    });
+
+    test("class", () => {
+      const Animal = class {};
+      const dog = new Animal();
+      // Native classes never override @@toStringTag, but we do it anyways
+      expect(String(dog)).toBe("[object Object]");
+
+      const NamelessAnimal = (() => class {})();
+      const namelessDog = new NamelessAnimal();
+      expect(String(namelessDog)).toBe("[object Object]");
+    });
   });
 });
 
@@ -243,6 +362,13 @@ describe("isKlass", () => {
     expect(isKlass(Foo)).toBe(true);
     const Bar = klass({ constructor() {} });
     expect(isKlass(Bar)).toBe(true);
+  });
+
+  it("can be substituted with instanceof", () => {
+    const Animal = klass({});
+    expect(Animal instanceof klass).toBe(true);
+    expect(Animal instanceof Function).toBe(true);
+    expect(Animal instanceof Object).toBe(true);
   });
 });
 

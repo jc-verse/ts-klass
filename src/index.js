@@ -23,21 +23,15 @@ function klassCreator(body, name, SuperKlass) {
       })()
     : function defaultConstructor(props) {
         if (!props) return;
-        Object.defineProperties(
+        Object.keys(props).forEach((k) => {
           // eslint-disable-next-line @typescript-eslint/no-invalid-this
-          this,
-          Object.fromEntries(
-            Object.keys(props).map((k) => [
-              k,
-              {
-                value: props[k],
-                configurable: true,
-                enumerable: true,
-                writable: true,
-              },
-            ]),
-          ),
-        );
+          Object.defineProperty(this, k, {
+            value: props[k],
+            configurable: true,
+            enumerable: true,
+            writable: true,
+          });
+        });
       };
 
   const [staticFields, instanceFields] = Object.entries(body).reduce(
@@ -69,12 +63,8 @@ function klassCreator(body, name, SuperKlass) {
   instanceFields.forEach(([key, value]) => {
     SomeKlass.prototype[key] = value;
   });
-  Object.defineProperty(SomeKlass, "name", {
-    value: name,
-  });
-  Object.defineProperty(SomeKlass, "length", {
-    value: constructor.length,
-  });
+  Object.defineProperty(SomeKlass, "name", { value: name });
+  Object.defineProperty(SomeKlass, "length", { value: constructor.length });
   if (name) {
     Object.defineProperty(SomeKlass.prototype, Symbol.toStringTag, {
       value: name,
