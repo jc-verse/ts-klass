@@ -107,6 +107,21 @@ describe("klass constructor", () => {
     const dog = Animal();
     expect(dog.constructor).toBe(Animal);
   });
+
+  it("has correct length value", () => {
+    const Animal = klass({});
+    expect(Animal.length).toBe(1);
+    const Animal2 = klass({
+      constructor() {},
+    });
+    expect(Animal2.length).toBe(0);
+    const Animal3 = klass({
+      constructor(foo, bar) {
+        console.log(foo, bar);
+      },
+    });
+    expect(Animal3.length).toBe(2);
+  });
 });
 
 describe("static field", () => {
