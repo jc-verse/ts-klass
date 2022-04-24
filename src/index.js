@@ -1,6 +1,18 @@
-function klassCreator(body, name) {
+function klassCreator(body, name, SuperKlass) {
+  if (typeof body === "string") {
+    if (name) {
+      throw new Error(
+        `The klass creator already has a name bound as "${name}". You can't re-write its name.`,
+      );
+    } else {
+      throw new Error(
+        `The klass creator already has a super klass. Please bind the name before attaching super klass.`,
+      );
+    }
+  }
   if (typeof body !== "object" || !body)
     throw new Error("You can't create a klass with a non-object body.");
+  if (!isKlass(SuperKlass)) throw new Error("You can only extend klasses.");
 
   const constructor = Object.hasOwn(body, "constructor")
     ? (() => {
@@ -58,15 +70,9 @@ function klassCreator(body, name) {
   });
   Object.defineProperty(SomeKlass, "name", {
     value: name,
-    configurable: true,
-    enumerable: false,
-    writable: false,
   });
   Object.defineProperty(SomeKlass, "length", {
     value: constructor.length,
-    configurable: true,
-    enumerable: false,
-    writable: false,
   });
   if (name) {
     Object.defineProperty(SomeKlass.prototype, Symbol.toStringTag, {
@@ -80,44 +86,24 @@ function klassCreator(body, name) {
 
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
-    const nameBoundKlassCreator = (body) => {
-      if (typeof body === "string") {
-        throw new Error(
-          `The klass creator already has a name bound as "${bodyOrName}". You can't re-write its name.`,
-        );
-      }
-      return klassCreator(body, bodyOrName);
-    };
-    Object.defineProperty(nameBoundKlassCreator, "boundName", {
-      value: bodyOrName,
-      configurable: false,
-      enumerable: true,
-      writable: false,
+    const nameBoundKlassCreator = (body) =>
+      klassCreator(body, bodyOrName, null);
+    nameBoundKlassCreator.extends = (SuperKlass) => (body) =>
+      klassCreator(body, bodyOrName, SuperKlass);
+    [nameBoundKlassCreator, nameBoundKlassCreator.extends].forEach((o) => {
+      Object.defineProperty(o, "boundName", {
+        value: bodyOrName,
+        configurable: false,
+        enumerable: true,
+        writable: false,
+      });
     });
-    // nameBoundKlassCreator.extends = extend;
     return nameBoundKlassCreator;
   }
-  return klassCreator(bodyOrName, "");
+  return klassCreator(bodyOrName, "", null);
 }
 
-// function extend(SuperKlass) {
-//   if (!isKlass(SuperKlass))
-//     throw new Error("You can only extend a klass.");
-//   // eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-invalid-this
-//   const klassCreator = this;
-//   function derivedKlassCreator(body) {
-//     // eslint-disable-next-line @typescript-eslint/no-invalid-this
-//     return function extendedKlass(...args) {
-//       const instance = NewKlass(...args);
-//     };
-//   }
-//   if (klassCreator.boundName)
-//     derivedKlassCreator.boundName = klassCreator.boundName;
-//   derivedKlassCreator.baseKlass = SuperKlass;
-//   return derivedKlassCreator;
-// }
-
-// klass.extends = extend;
+klass.extends = (SuperKlass) => (body) => klassCreator(body, "", SuperKlass);
 
 const klassMarker = Symbol("klass");
 
@@ -127,6 +113,6 @@ Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 
 export function nеw(someKlass) {
   if (!isKlass(someKlass))
-    throw new Error("nеw should only be called on klasses");
+    throw new Error("nеw should only be called on klasses.");
   return someKlass;
 }

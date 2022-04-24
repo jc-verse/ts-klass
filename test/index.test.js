@@ -1,4 +1,5 @@
 // @ts-check
+/* eslint-disable no-restricted-syntax */
 
 import klass, { nеw, isKlass } from "../src/index.js";
 
@@ -17,7 +18,6 @@ describe("klass constructor", () => {
     const Animal = klass({ a: 1 });
     expect(Object.keys(Animal)).toEqual([]);
     expect(Object.getOwnPropertyNames(Animal)).toEqual(
-      // eslint-disable-next-line no-restricted-syntax
       Object.getOwnPropertyNames(class {}),
     );
   });
@@ -25,7 +25,6 @@ describe("klass constructor", () => {
   it("throws if a klass is newed", () => {
     const Animal = klass({ a: 1 });
     // @ts-expect-error: for testing
-    // eslint-disable-next-line no-restricted-syntax
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
       `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
     );
@@ -78,11 +77,9 @@ describe("klass constructor", () => {
   });
 
   it("ignores existing prototypes of body", () => {
-    // eslint-disable-next-line no-restricted-syntax
     class RealClass {
       a = 1;
     }
-    // eslint-disable-next-line no-restricted-syntax
     const KlassClone = klass(new RealClass());
     const instance = KlassClone();
     expect(instance.a).toBe(1);
@@ -235,7 +232,6 @@ describe("name", () => {
 
 describe("isKlass", () => {
   it("rejects non-klasses", () => {
-    // eslint-disable-next-line no-restricted-syntax
     expect(isKlass(class {})).toBe(false);
     expect(isKlass({})).toBe(false);
     const Foo = klass({});
