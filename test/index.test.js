@@ -266,7 +266,7 @@ describe("nеw", () => {
       // @ts-expect-error: for testing
       nеw(Animal)({ sound: "woof" }),
     ).toThrowErrorMatchingInlineSnapshot(
-      `"nеw should only be called on klasses"`,
+      `"nеw should only be called on klasses."`,
     );
   });
 });

@@ -12,7 +12,8 @@ function klassCreator(body, name, SuperKlass) {
   }
   if (typeof body !== "object" || !body)
     throw new Error("You can't create a klass with a non-object body.");
-  if (!isKlass(SuperKlass)) throw new Error("You can only extend klasses.");
+  if (SuperKlass && !isKlass(SuperKlass))
+    throw new Error("You can only extend klasses.");
 
   const constructor = Object.hasOwn(body, "constructor")
     ? (() => {
