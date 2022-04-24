@@ -1,6 +1,5 @@
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
-    // eslint-disable-next-line func-style
     const nameBoundKlassCreator = (body) => {
       if (typeof body === "string") {
         throw new Error(
@@ -56,12 +55,9 @@ export default function klass(bodyOrName) {
   const [staticFields, instanceFields] = Object.entries(body).reduce(
     (acc, [key, value]) => {
       const trimmedKey = key.trim();
-      if (trimmedKey.startsWith("static ")) {
+      if (trimmedKey.startsWith("static "))
         acc[0].push([trimmedKey.replace(/^static /, "").trim(), value]);
-        delete body[key];
-      } else {
-        acc[1].push([key, value]);
-      }
+      else acc[1].push([key, value]);
       return acc;
     },
     [[], []],
@@ -119,11 +115,9 @@ export default function klass(bodyOrName) {
 
 const klassMarker = Symbol("klass");
 
-Object.defineProperty(klass, Symbol.hasInstance, {
-  value: (maybeKlass) => Boolean(maybeKlass[klassMarker]),
-});
-
 export const isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
+
+Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 
 export function nеw(someKlass) {
   if (!isKlass(someKlass))
