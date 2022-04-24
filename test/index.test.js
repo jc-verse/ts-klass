@@ -173,6 +173,7 @@ describe("name", () => {
   });
 
   it("is forbidden to be re-bound", () => {
+    // @ts-expect-error: for testing
     expect(() => klass("foo")("bar")({})).toThrowErrorMatchingInlineSnapshot(
       `"The klass creator already has a name bound as \\"foo\\". You can't re-write its name."`,
     );

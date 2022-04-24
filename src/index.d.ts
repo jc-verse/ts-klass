@@ -25,13 +25,14 @@ type KlassWithCtor<Body extends { constructor: (...args: never) => void }> =
       [klassMarker]: true;
     };
 
-declare function klass(name: string): typeof klass & { boundName: string };
-declare function klass<Body extends { constructor: (...args: never) => void }>(
-  body: Body & ThisType<any>,
-): KlassWithCtor<Body>;
-declare function klass<Body extends object>(
+declare function klassWithName<
+  Body extends { constructor: (...args: never) => void },
+>(body: Body & ThisType<any>): KlassWithCtor<Body>;
+declare function klassWithName<Body extends object>(
   body: Body & ThisType<any>,
 ): Klass<Body>;
+declare const klass: typeof klassWithName &
+  ((name: string) => typeof klassWithName & { boundName: string });
 
 export function nеw<T extends Klass<object>>(someKlass: T): T;
 export function isKlass(maybeKlass: unknown): maybeKlass is Klass<object>;
