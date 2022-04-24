@@ -13,6 +13,9 @@ export default function klass(bodyOrName) {
         enumerable: false,
         writable: false,
       });
+      Object.defineProperty(NewKlass.prototype, Symbol.toStringTag, {
+        value: bodyOrName,
+      });
       return NewKlass;
     };
     Object.defineProperty(nameBoundKlassCreator, "boundName", {

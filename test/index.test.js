@@ -101,6 +101,12 @@ describe("klass constructor", () => {
     expect(cat instanceof Function).toBe(false);
     expect(cat instanceof Object).toBe(true);
   });
+
+  it("can be retrieved through constructor reflection on instance", () => {
+    const Animal = klass({});
+    const dog = Animal();
+    expect(dog.constructor).toBe(Animal);
+  });
 });
 
 describe("static field", () => {
@@ -143,16 +149,6 @@ describe("static field", () => {
     });
     expect(Animal.greet()).toBe(1);
   });
-
-  it("can be retrieved through constructor reflection on instance", () => {
-    const Animal = klass({
-      "static greet"() {
-        return "Hi";
-      },
-    });
-    const dog = Animal();
-    expect(dog.constructor).toBe(Animal);
-  });
 });
 
 describe("name", () => {
@@ -176,6 +172,12 @@ describe("name", () => {
     expect(() => klass("foo")("bar")({})).toThrowErrorMatchingInlineSnapshot(
       `"The klass creator already has a name bound as \\"foo\\". You can't re-write its name."`,
     );
+  });
+
+  it("overrides default @@toStringTag", () => {
+    const Animal = klass("Animal")({});
+    const dog = Animal();
+    expect(String(dog)).toBe("[object Animal]");
   });
 });
 
