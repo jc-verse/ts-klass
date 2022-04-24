@@ -1,2 +1,5 @@
 .*
 test/
+coverage
+project-words.txt
+tsconfig.json
