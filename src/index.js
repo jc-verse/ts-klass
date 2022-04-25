@@ -52,8 +52,13 @@ function klassCreator(body, name, SuperKlass) {
       );
     }
     const instance = Object.create(SomeKlass.prototype);
+    SuperKlass?.apply(instance, args);
     constructor.apply(instance, args);
     return instance;
+  }
+  if (SuperKlass) {
+    Object.setPrototypeOf(SomeKlass, SuperKlass);
+    Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
   }
   // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {

@@ -100,6 +100,36 @@ const Animal = klass({
 Animal.greet();
 ```
 
+### Extending klasses
+
+You can use `klass.extends()` to create a derived klass.
+
+```js
+const Entity = klass({
+  x: 1,
+  y: 2,
+});
+const Animal = klass.extends(Entity)({
+  location() {
+    return [this.x, this.y];
+  },
+});
+const dog = Animal();
+console.log(dog.location());
+```
+
+Named klasses can have a super klass as well.
+
+```js
+const Animal = klass("Animal").extends(Entity)({
+  location() {
+    return [this.x, this.y];
+  },
+});
+```
+
+The argument of `extends` must be a klass constructor.
+
 ### Klass name
 
 Unfortunately, because `klass` is ultimately a normal ECMAScript function, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.

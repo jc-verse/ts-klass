@@ -312,42 +312,171 @@ describe("name", () => {
   });
 });
 
-// describe("extends", () => {
-//   it("adds extra properties from the base klass", () => {
-//     const Entity = klass({
-//       position: 1,
-//     });
-//     const Animal = klass.extends(Entity)({
-//       location() {
-//         return [this.position, this.position];
-//       }
-//     });
-//     expect(Animal().location()).toEqual([1, 1]);
-//   });
-//   it("can extend a named klass ctor", () => {
-//     const Entity = klass("Entity")({
-//       position: 1,
-//     });
-//     const Animal = klass("Animal").extends(Entity)({
-//       location() {
-//         return [this.position, this.position];
-//       }
-//     });
-//     expect(Animal().location()).toEqual([1, 1]);
-//     expect(Animal.name).toBe("Animal");
-//   });
-//   it("does not take the name from super klass", () => {
-//     const Entity = klass("Entity")({
-//       position: 1,
-//     });
-//     const Animal = klass.extends(Entity)({
-//       location() {
-//         return [this.position, this.position];
-//       }
-//     });
-//     expect(Animal.name).toBe("");
-//   });
-// });
+describe("extends", () => {
+  it("adds extra properties from the base klass", () => {
+    const Entity = klass({
+      position: 1,
+    });
+    const Animal = klass.extends(Entity)({
+      location() {
+        return [this.position, this.position];
+      },
+    });
+    expect(Animal().location()).toEqual([1, 1]);
+  });
+  it("can extend a named klass ctor", () => {
+    const Entity = klass("Entity")({
+      position: 1,
+    });
+    const Animal = klass("Animal").extends(Entity)({
+      location() {
+        return [this.position, this.position];
+      },
+    });
+    expect(Animal().location()).toEqual([1, 1]);
+    expect(Animal.name).toBe("Animal");
+  });
+  it("does not take the name from super klass", () => {
+    const Entity = klass("Entity")({
+      position: 1,
+    });
+    const Animal = klass.extends(Entity)({
+      location() {
+        return [this.position, this.position];
+      },
+    });
+    expect(Animal.name).toBe("");
+  });
+  describe("has correct prototype chain", () => {
+    test("klass", () => {
+      const A = klass({
+        f: 1,
+        fa: 1,
+        m() {},
+        ma() {},
+        "static sf": 1,
+        "static sfa": 1,
+        "static sm"() {},
+        "static sma"() {},
+      });
+      const B = klass.extends(A)({
+        f: 2,
+        fb: 2,
+        m() {},
+        mb() {},
+        "static sf": 2,
+        "static sfb": 2,
+        "static sm"() {},
+        "static smb"() {},
+      });
+      const a = A();
+      const b = B();
+      expect(Object.getPrototypeOf(B)).toBe(A);
+      expect(Object.getPrototypeOf(A)).toBe(Function.prototype);
+      expect(Object.getPrototypeOf(b)).toBe(B.prototype);
+      expect(Object.getPrototypeOf(Object.getPrototypeOf(b))).toBe(A.prototype);
+      expect(Object.getPrototypeOf(a)).toBe(A.prototype);
+      // TODO: class fields should be on instance, not prototype
+      // expect(Object.getOwnPropertyNames(b)).toEqual(["f", "fa", "fb"]);
+      expect(Object.getOwnPropertyNames(Object.getPrototypeOf(b))).toEqual([
+        "constructor",
+        // TODO: class fields should be on instance, not prototype
+        "f",
+        "fb",
+        "m",
+        "mb",
+      ]);
+      expect(
+        Object.getOwnPropertyNames(
+          Object.getPrototypeOf(Object.getPrototypeOf(b)),
+        ),
+      ).toEqual([
+        "constructor",
+        // TODO: class fields should be on instance, not prototype
+        "f",
+        "fa",
+        "m",
+        "ma",
+      ]);
+      expect(Object.getOwnPropertyNames(B)).toEqual([
+        "length",
+        "name",
+        "prototype",
+        "sf",
+        "sfb",
+        "sm",
+        "smb",
+      ]);
+      expect(Object.getOwnPropertyNames(A)).toEqual([
+        "length",
+        "name",
+        "prototype",
+        "sf",
+        "sfa",
+        "sm",
+        "sma",
+      ]);
+    });
+    test("class", () => {
+      class A {
+        f = 1;
+        fa = 1;
+        m() {}
+        ma() {}
+        static sf = 1;
+        static sfa = 1;
+        static sm() {}
+        static sma() {}
+      }
+      class B extends A {
+        f = 2;
+        fb = 2;
+        m() {}
+        mb() {}
+        static sf = 2;
+        static sfb = 2;
+        static sm() {}
+        static smb() {}
+      }
+      const a = new A();
+      const b = new B();
+      expect(Object.getPrototypeOf(B)).toBe(A);
+      expect(Object.getPrototypeOf(A)).toBe(Function.prototype);
+      expect(Object.getPrototypeOf(b)).toBe(B.prototype);
+      expect(Object.getPrototypeOf(Object.getPrototypeOf(b))).toBe(A.prototype);
+      expect(Object.getPrototypeOf(a)).toBe(A.prototype);
+      expect(Object.getOwnPropertyNames(b)).toEqual(["f", "fa", "fb"]);
+      expect(Object.getOwnPropertyNames(Object.getPrototypeOf(b))).toEqual([
+        "constructor",
+        "m",
+        "mb",
+      ]);
+      expect(
+        Object.getOwnPropertyNames(
+          Object.getPrototypeOf(Object.getPrototypeOf(b)),
+        ),
+      ).toEqual(["constructor", "m", "ma"]);
+      expect(Object.getOwnPropertyNames(B)).toEqual([
+        "length",
+        "name",
+        "prototype",
+        "sm",
+        "smb",
+        "sf",
+        "sfb",
+      ]);
+      expect(Object.getOwnPropertyNames(A)).toEqual([
+        "length",
+        "name",
+        "prototype",
+        "sm",
+        "sma",
+        "sf",
+        "sfa",
+      ]);
+    });
+  });
+});
 
 describe("isKlass", () => {
   it("rejects non-klasses", () => {
