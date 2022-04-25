@@ -49,20 +49,20 @@ function klassCreator(body, name, SuperKlass) {
     ? (() => {
         const customCtor = body.constructor;
         delete body.constructor;
-        function constructor(...args) {
-          // eslint-disable-next-line @typescript-eslint/no-invalid-this
-          defineProperties(this, instanceFields);
-          // eslint-disable-next-line @typescript-eslint/no-invalid-this
-          customCtor.apply(this, args);
-        }
-        Object.defineProperty(constructor, "length", {
-          value: customCtor.length,
+        // eslint-disable-next-line no-restricted-syntax
+        return new Proxy(customCtor, {
+          apply(target, thisArg, args) {
+            defineProperties(thisArg, instanceFields);
+            Reflect.apply(target, thisArg, args);
+            return thisArg;
+          },
         });
-        return constructor;
       })()
     : function defaultConstructor(props = {}) {
-        // eslint-disable-next-line @typescript-eslint/no-invalid-this
-        defineProperties(this, [...instanceFields, ...Object.entries(props)]);
+        Constructors.get(SuperKlass)?.apply(this, props);
+        defineProperties(this, instanceFields);
+        defineProperties(this, Object.entries(props));
+        return this;
       };
 
   function SomeKlass(...args) {
@@ -72,7 +72,6 @@ function klassCreator(body, name, SuperKlass) {
       );
     }
     const instance = Object.create(SomeKlass.prototype);
-    Constructors.get(SuperKlass)?.apply(instance, args);
     constructor.apply(instance, args);
     return instance;
   }
@@ -80,10 +79,32 @@ function klassCreator(body, name, SuperKlass) {
   if (SuperKlass) {
     Object.setPrototypeOf(SomeKlass, SuperKlass);
     Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
-    // For accessing `super` in the body. We don't allow `super` in static
-    // methods yet, but we should figure out a way to (probably through chaining
-    // another `.static({})` block that binds another prototype)
-    Object.setPrototypeOf(body, SuperKlass.prototype);
+    // For accessing `super` in the body. We don't properly supper `super` in
+    // static methods yet, but we should figure out a way to (probably through
+    // chaining another `.static({})` block that binds another prototype)
+    Object.setPrototypeOf(
+      body,
+      // eslint-disable-next-line no-restricted-syntax
+      new Proxy(SuperKlass.prototype, {
+        get(target, property) {
+          if (property !== "constructor") return Reflect.get(target, property);
+          // SuperKlass.prototype.constructor is actually SuperKlass itself, but
+          // we proxy it to the constructor function, so that we can support
+          // `super()` with `super.constructor()`
+          // eslint-disable-next-line no-restricted-syntax
+          return new Proxy(Constructors.get(SuperKlass), {
+            apply(ctor, thisArg, args) {
+              // TODO we should try our best to disallow accessing this before
+              // super. We probably can't reach full ES-compliance, but it at
+              // least avoids footguns
+              // superBeenCalled = true;
+              Reflect.apply(ctor, thisArg, args);
+              return thisArg;
+            },
+          });
+        },
+      }),
+    );
   }
   const { staticFields, instanceMethods, instanceFields } = splitBody(body);
 

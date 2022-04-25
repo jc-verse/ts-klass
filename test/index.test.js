@@ -248,6 +248,34 @@ describe("static field", () => {
   });
 });
 
+describe("class field", () => {
+  describe("are initialized before constructor", () => {
+    test("klass", () => {
+      let foo = undefined;
+      const Animal = klass({
+        name: "dog",
+        constructor() {
+          foo = this.name;
+        },
+      });
+      Animal();
+      expect(foo).toBe("dog");
+    });
+
+    test("class", () => {
+      let foo = undefined;
+      const Animal = class {
+        name = "dog";
+        constructor() {
+          foo = this.name;
+        }
+      };
+      new Animal();
+      expect(foo).toBe("dog");
+    });
+  });
+});
+
 describe("name", () => {
   describe("allows binding an explicit name", () => {
     test("klass", () => {
@@ -347,24 +375,6 @@ describe("extends", () => {
       },
     });
     expect(Animal.name).toBe("");
-  });
-
-  it("allows constructor without super?? Should we?", () => {
-    const Entity = klass("Entity")({
-      constructor() {
-        this.a = 1;
-        this.same = 5;
-      },
-    });
-    // No name, so that it serializes to `Object {...}`
-    const Animal = klass.extends(Entity)({
-      constructor() {
-        this.b = 2;
-        this.same = 3;
-      },
-    });
-    const dog = Animal();
-    expect(dog).toEqual({ a: 1, b: 2, same: 3 });
   });
 
   describe("has correct prototype chain", () => {
@@ -512,6 +522,65 @@ describe("extends", () => {
 });
 
 describe("super call", () => {
+  it("needs to call super in constructor", () => {
+    const Entity = klass("Entity")({
+      constructor() {
+        this.a = 1;
+        this.same = 5;
+      },
+    });
+    // No name, so that it serializes to `Object {...}`
+    const Animal = klass.extends(Entity)({
+      constructor() {
+        // TODO should we disallow this before super?
+        this.b = 2;
+        this.same = 3;
+        super.constructor();
+      },
+    });
+    const Animal2 = klass.extends(Entity)({
+      constructor() {
+        super.constructor();
+        this.b = 2;
+        this.same = 3;
+      },
+    });
+    const dog = Animal();
+    const dog2 = Animal2();
+    expect(dog).toEqual({ a: 1, b: 2, same: 5 });
+    expect(dog2).toEqual({ a: 1, b: 2, same: 3 });
+  });
+
+  describe("execution order is the same as class", () => {
+    test("klass", () => {
+      let foo = undefined;
+      const Entity = klass("Entity")({
+        constructor() {
+          foo = this.a;
+        },
+      });
+      // Class field binding happens after super call
+      const Animal = klass.extends(Entity)({ a: 1 });
+      Animal();
+      expect(foo).toBe(undefined);
+    });
+
+    test("class", () => {
+      let foo = undefined;
+      const Entity = class {
+        /** @member {number} a */
+        constructor() {
+          foo = this.a;
+        }
+      };
+      const Animal = class extends Entity {
+        a = 1;
+      };
+      new Animal();
+      expect(foo).toBe(undefined);
+    });
+  });
+
   it("is valid in methods", () => {
     const A = klass({
       method() {

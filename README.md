@@ -130,6 +130,45 @@ const Animal = klass("Animal").extends(Entity)({
 
 The argument of `extends` must be a klass constructor.
 
+#### `super.constructor`
+
+The semantics of `super` are roughly the same as in ES classes.
+
+```js
+const Entity = klass({
+  greet() {
+    console.log("Hello");
+  },
+});
+
+const Animal = klass("Animal").extends(Entity)({
+  greet() {
+    super.greet();
+  },
+});
+
+Animal().greet(); // Logs "Hello"
+```
+
+In constructors, you also need to call `super.constructor()` to request the base klass to modify `this`. Note that we have to use `super.constructor()` instead of `super()`, because the latter is not valid in an object literal.
+
+```js
+const Entity = klass({
+  constructor() {
+    this.a = 1;
+  },
+});
+
+const Animal = klass("Animal").extends(Entity)({
+  constructor() {
+    super.constructor();
+    this.b = this.a + 1;
+  },
+});
+
+console.log(Animal()); // Logs { a: 1, b: 2 }
+```
+
 ### Klass name
 
 Unfortunately, because `klass` is ultimately a normal ECMAScript function, there's no great way for us to automatically bind a klass' name based on what it's assigned to. If a klass' name is important to you, you can explicitly bind a name.
