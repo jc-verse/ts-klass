@@ -45,15 +45,44 @@ function klassCreator(body, name, SuperKlass) {
   if (SuperKlass && !isKlass(SuperKlass))
     throw new Error("You can only extend klasses.");
 
+  let superBeenCalled = false;
+
+  function createGuardedThisArg(thisArg) {
+    return new Proxy(
+      thisArg,
+      Object.fromEntries(
+        Object.getOwnPropertyNames(Reflect).map((k) => [
+          k,
+          (...opArgs) => {
+            if (!superBeenCalled) {
+              throw new Error(
+                `You must call super.constructor() in derived klass before performing '${k}' on 'this'.`,
+              );
+            }
+            return Reflect[k](...opArgs);
+          },
+        ]),
+      ),
+    );
+  }
+
   const constructor = Object.hasOwn(body, "constructor")
     ? (() => {
         const customCtor = body.constructor;
         delete body.constructor;
-        // eslint-disable-next-line no-restricted-syntax
         return new Proxy(customCtor, {
           apply(target, thisArg, args) {
             defineProperties(thisArg, instanceFields);
-            Reflect.apply(target, thisArg, args);
+            Reflect.apply(
+              target,
+              SuperKlass ? createGuardedThisArg(thisArg) : thisArg,
+              args,
+            );
+            if (SuperKlass && !superBeenCalled) {
+              throw new Error(
+                "You must call super.constructor() in derived klass before returning from derived constructor.",
+              );
+            }
             return thisArg;
           },
         });
@@ -79,25 +108,20 @@ function klassCreator(body, name, SuperKlass) {
   if (SuperKlass) {
     Object.setPrototypeOf(SomeKlass, SuperKlass);
     Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
-    // For accessing `super` in the body. We don't properly supper `super` in
+    // For accessing `super` in the body. We don't properly support `super` in
     // static methods yet, but we should figure out a way to (probably through
     // chaining another `.static({})` block that binds another prototype)
     Object.setPrototypeOf(
       body,
-      // eslint-disable-next-line no-restricted-syntax
       new Proxy(SuperKlass.prototype, {
         get(target, property) {
           if (property !== "constructor") return Reflect.get(target, property);
           // SuperKlass.prototype.constructor is actually SuperKlass itself, but
           // we proxy it to the constructor function, so that we can support
-          // `super()` with `super.constructor()`
-          // eslint-disable-next-line no-restricted-syntax
+          // calling `super()` through `super.constructor()`
           return new Proxy(Constructors.get(SuperKlass), {
             apply(ctor, thisArg, args) {
-              // TODO we should try our best to disallow accessing this before
-              // super. We probably can't reach full ES-compliance, but it at
-              // least avoids footguns
-              // superBeenCalled = true;
+              superBeenCalled = true;
               Reflect.apply(ctor, thisArg, args);
               return thisArg;
             },

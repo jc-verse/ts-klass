@@ -121,7 +121,7 @@ console.log(dog.location());
 Named klasses can have a super klass as well.
 
 ```js
-const Animal = klass("Animal").extends(Entity)({
+const Animal = klass.extends(Entity)({
   location() {
     return [this.x, this.y];
   },
@@ -141,7 +141,7 @@ const Entity = klass({
   },
 });
 
-const Animal = klass("Animal").extends(Entity)({
+const Animal = klass.extends(Entity)({
   greet() {
     super.greet();
   },
@@ -159,7 +159,7 @@ const Entity = klass({
   },
 });
 
-const Animal = klass("Animal").extends(Entity)({
+const Animal = klass.extends(Entity)({
   constructor() {
     super.constructor();
     this.b = this.a + 1;
@@ -167,6 +167,17 @@ const Animal = klass("Animal").extends(Entity)({
 });
 
 console.log(Animal()); // Logs { a: 1, b: 2 }
+```
+
+As you would expect, you cannot access `this` before calling `super.constructor`.
+
+```js
+const Animal = klass.extends(Entity)({
+  constructor() {
+    this.b = this.a + 1; // Throws error
+    super.constructor();
+  },
+});
 ```
 
 ### Klass name

@@ -532,23 +532,47 @@ describe("super call", () => {
     // No name, so that it serializes to `Object {...}`
     const Animal = klass.extends(Entity)({
       constructor() {
-        // TODO should we disallow this before super?
-        this.b = 2;
-        this.same = 3;
-        super.constructor();
-      },
-    });
-    const Animal2 = klass.extends(Entity)({
-      constructor() {
         super.constructor();
         this.b = 2;
         this.same = 3;
       },
     });
     const dog = Animal();
-    const dog2 = Animal2();
-    expect(dog).toEqual({ a: 1, b: 2, same: 5 });
-    expect(dog2).toEqual({ a: 1, b: 2, same: 3 });
+    expect(dog).toEqual({ a: 1, b: 2, same: 3 });
+  });
+
+  it("needs to happen before accessing this", () => {
+    const Entity = klass("Entity")({});
+    const Animal = klass.extends(Entity)({
+      constructor() {
+        this.b = 2;
+      },
+    });
+    expect(() => Animal()).toThrowErrorMatchingInlineSnapshot(
+      `"You must call super.constructor() in derived klass before performing 'set' on 'this'."`,
+    );
+    const Animal2 = klass.extends(Entity)({
+      constructor() {
+        console.log(this.a);
+      },
+    });
+    expect(() => Animal2()).toThrowErrorMatchingInlineSnapshot(
+      `"You must call super.constructor() in derived klass before performing 'get' on 'this'."`,
+    );
+    const Animal3 = klass.extends(Entity)({
+      constructor() {
+        console.log(Object.keys(this));
+      },
+    });
+    expect(() => Animal3()).toThrowErrorMatchingInlineSnapshot(
+      `"You must call super.constructor() in derived klass before performing 'ownKeys' on 'this'."`,
+    );
+    const Animal4 = klass.extends(Entity)({
+      constructor() {},
+    });
+    expect(() => Animal4()).toThrowErrorMatchingInlineSnapshot(
+      `"You must call super.constructor() in derived klass before returning from derived constructor."`,
+    );
   });
 
   describe("execution order is the same as class", () => {
@@ -568,7 +592,6 @@ describe("super call", () => {
     test("class", () => {
       let foo = undefined;
       const Entity = class {
-        /** @member {number} a */
         constructor() {
           foo = this.a;
         }
@@ -588,11 +611,14 @@ describe("super call", () => {
       },
     });
     const B = klass.extends(A)({
+      a: 1,
       method() {
-        return super.method();
+        // Testing order: 'this' should be allowed before 'super'
+        const b = this.a;
+        return super.method() + b;
       },
     });
-    expect(B().method()).toBe(1);
+    expect(B().method()).toBe(2);
   });
 });
 

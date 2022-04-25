@@ -27,7 +27,7 @@
       },
       {
         "message": "We hate new.",
-        "selector": "NewExpression:not(:has(Identifier[name=Error]))"
+        "selector": "NewExpression:not(:has(Identifier[name=Error], Identifier[name=Proxy]))"
       },
       {
         "message": "We hate classes.",
