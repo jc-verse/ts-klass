@@ -65,8 +65,6 @@ function klassCreator(body, name, SuperKlass) {
         defineProperties(this, [...instanceFields, ...Object.entries(props)]);
       };
 
-  const { staticFields, instanceMethods, instanceFields } = splitBody(body);
-
   function SomeKlass(...args) {
     if (new.target) {
       throw new Error(
@@ -82,7 +80,13 @@ function klassCreator(body, name, SuperKlass) {
   if (SuperKlass) {
     Object.setPrototypeOf(SomeKlass, SuperKlass);
     Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
+    // For accessing `super` in the body. We don't allow `super` in static
+    // methods yet, but we should figure out a way to (probably through chaining
+    // another `.static({})` block that binds another prototype)
+    Object.setPrototypeOf(body, SuperKlass.prototype);
   }
+  const { staticFields, instanceMethods, instanceFields } = splitBody(body);
+
   // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {
     SomeKlass[key] = value;
@@ -93,11 +97,9 @@ function klassCreator(body, name, SuperKlass) {
   });
   Object.defineProperty(SomeKlass, "name", { value: name });
   Object.defineProperty(SomeKlass, "length", { value: constructor.length });
-  if (name) {
-    Object.defineProperty(SomeKlass.prototype, Symbol.toStringTag, {
-      value: name,
-    });
-  }
+  Object.defineProperty(SomeKlass.prototype, Symbol.toStringTag, {
+    value: name || "Object",
+  });
   // Brand for the newly created klass
   SomeKlass[klassMarker] = true;
   return SomeKlass;

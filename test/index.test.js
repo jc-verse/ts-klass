@@ -323,6 +323,7 @@ describe("extends", () => {
     });
     expect(Animal().location()).toEqual([1, 1]);
   });
+
   it("can extend a named klass ctor", () => {
     const Entity = klass("Entity")({
       position: 1,
@@ -335,6 +336,7 @@ describe("extends", () => {
     expect(Animal().location()).toEqual([1, 1]);
     expect(Animal.name).toBe("Animal");
   });
+
   it("does not take the name from super klass", () => {
     const Entity = klass("Entity")({
       position: 1,
@@ -346,6 +348,25 @@ describe("extends", () => {
     });
     expect(Animal.name).toBe("");
   });
+
+  it("allows constructor without super?? Should we?", () => {
+    const Entity = klass("Entity")({
+      constructor() {
+        this.a = 1;
+        this.same = 5;
+      },
+    });
+    // No name, so that it serializes to `Object {...}`
+    const Animal = klass.extends(Entity)({
+      constructor() {
+        this.b = 2;
+        this.same = 3;
+      },
+    });
+    const dog = Animal();
+    expect(dog).toEqual({ a: 1, b: 2, same: 3 });
+  });
+
   describe("has correct prototype chain", () => {
     test("klass", () => {
       const A = klass({
@@ -463,6 +484,46 @@ describe("extends", () => {
         "sfa",
       ]);
     });
+  });
+
+  describe("restores toStringTag in derived klass", () => {
+    test("klass", () => {
+      const Entity = klass("Entity")({});
+      const Animal = klass.extends(Entity)({});
+      expect(String(Animal())).toBe("[object Object]");
+    });
+    test("class", () => {
+      const Entity = class Entity {};
+      const Animal = (() => class extends Entity {})();
+      expect(String(new Animal())).toBe("[object Object]");
+    });
+  });
+
+  it("forbids extending non-klasses", () => {
+    expect(() =>
+      // @ts-expect-error: for testing
+      klass.extends(class {})({}),
+    ).toThrowErrorMatchingInlineSnapshot(`"You can only extend klasses."`);
+    // @ts-expect-error: for testing
+    expect(() => klass.extends({})({})).toThrowErrorMatchingInlineSnapshot(
+      `"You can only extend klasses."`,
+    );
+  });
+});
+
+describe("super call", () => {
+  it("is valid in methods", () => {
+    const A = klass({
+      method() {
+        return 1;
+      },
+    });
+    const B = klass.extends(A)({
+      method() {
+        return super.method();
+      },
+    });
+    expect(B().method()).toBe(1);
   });
 });
 

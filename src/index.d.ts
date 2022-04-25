@@ -30,12 +30,11 @@ declare type KlassWithName = {
     body: Body & ThisType<any>,
   ): KlassWithCtor<Body>;
   <Body extends object>(body: Body & ThisType<any>): Klass<Body>;
-  extends: (SuperKlass: Klass<object>) => KlassWithName;
+  extends: ((SuperKlass: Klass<any>) => KlassWithName) &
+    ((SuperKlass: KlassWithCtor<any>) => KlassWithName);
 };
 declare const klass: KlassWithName &
-  ((name: string) => KlassWithName & { boundName: string }) & {
-    extends: (SuperKlass: Klass<object>) => KlassWithName;
-  };
+  ((name: string) => KlassWithName & { boundName: string });
 
 export function nеw<T extends Klass<object>>(someKlass: T): T;
 export function isKlass(maybeKlass: unknown): maybeKlass is Klass<object>;
