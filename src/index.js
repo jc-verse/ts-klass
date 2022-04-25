@@ -12,6 +12,22 @@ function defineProperties(obj, properties) {
   });
 }
 
+function splitBody(body) {
+  const staticFields = [],
+    instanceFields = [],
+    instanceMethods = [];
+  Object.entries(body).forEach(([key, value]) => {
+    const trimmedKey = key.trim();
+    if (trimmedKey.startsWith("static "))
+      staticFields.push([trimmedKey.replace(/^static /, "").trim(), value]);
+    // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
+    // differentiated, the latter is still a class field, not a method
+    else if (typeof value === "function") instanceMethods.push([key, value]);
+    else instanceFields.push([key, value]);
+  });
+  return { staticFields, instanceFields, instanceMethods };
+}
+
 function klassCreator(body, name, SuperKlass) {
   if (typeof body === "string") {
     if (name) {
@@ -49,21 +65,7 @@ function klassCreator(body, name, SuperKlass) {
         defineProperties(this, [...instanceFields, ...Object.entries(props)]);
       };
 
-  const [staticFields, instanceMethods, instanceFields] = Object.entries(
-    body,
-  ).reduce(
-    (acc, [key, value]) => {
-      const trimmedKey = key.trim();
-      if (trimmedKey.startsWith("static "))
-        acc[0].push([trimmedKey.replace(/^static /, "").trim(), value]);
-      // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
-      // differentiated, the latter is still a class field, not a method
-      else if (typeof value === "function") acc[1].push([key, value]);
-      else acc[2].push([key, value]);
-      return acc;
-    },
-    [[], [], []],
-  );
+  const { staticFields, instanceMethods, instanceFields } = splitBody(body);
 
   function SomeKlass(...args) {
     if (new.target) {
@@ -101,20 +103,25 @@ function klassCreator(body, name, SuperKlass) {
   return SomeKlass;
 }
 
+function bindKlassName(klassCtor, name) {
+  Object.defineProperty(klassCtor, "boundName", {
+    value: name,
+    configurable: false,
+    enumerable: true,
+    writable: false,
+  });
+}
+
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
     const nameBoundKlassCreator = (body) =>
       klassCreator(body, bodyOrName, null);
-    nameBoundKlassCreator.extends = (SuperKlass) => (body) =>
-      klassCreator(body, bodyOrName, SuperKlass);
-    [nameBoundKlassCreator, nameBoundKlassCreator.extends].forEach((o) => {
-      Object.defineProperty(o, "boundName", {
-        value: bodyOrName,
-        configurable: false,
-        enumerable: true,
-        writable: false,
-      });
-    });
+    nameBoundKlassCreator.extends = (SuperKlass) => {
+      const creator = (body) => klassCreator(body, bodyOrName, SuperKlass);
+      bindKlassName(creator, bodyOrName);
+      return creator;
+    };
+    bindKlassName(nameBoundKlassCreator, bodyOrName);
     return nameBoundKlassCreator;
   }
   return klassCreator(bodyOrName, "", null);
