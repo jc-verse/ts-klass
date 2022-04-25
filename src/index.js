@@ -31,19 +31,19 @@ function splitBody(body) {
 function klassCreator(body, name, SuperKlass) {
   if (typeof body === "string") {
     if (name) {
-      throw new Error(
+      throw new TypeError(
         `The klass creator already has a name bound as "${name}". You can't re-write its name.`,
       );
     } else {
-      throw new Error(
+      throw new TypeError(
         `The klass creator already has a super klass. Please bind the name before attaching super klass.`,
       );
     }
   }
   if (typeof body !== "object" || !body)
-    throw new Error("You can't create a klass with a non-object body.");
+    throw new TypeError("You can't create a klass with a non-object body.");
   if (SuperKlass && !isKlass(SuperKlass))
-    throw new Error("You can only extend klasses.");
+    throw new TypeError("You can only extend klasses.");
 
   let superBeenCalled = false;
 
@@ -55,7 +55,7 @@ function klassCreator(body, name, SuperKlass) {
           k,
           (...opArgs) => {
             if (!superBeenCalled) {
-              throw new Error(
+              throw new ReferenceError(
                 `You must call super.constructor() in derived klass before performing '${k}' on 'this'.`,
               );
             }
@@ -79,7 +79,7 @@ function klassCreator(body, name, SuperKlass) {
               args,
             );
             if (SuperKlass && !superBeenCalled) {
-              throw new Error(
+              throw new ReferenceError(
                 "You must call super.constructor() in derived klass before returning from derived constructor.",
               );
             }
@@ -96,7 +96,7 @@ function klassCreator(body, name, SuperKlass) {
 
   function SomeKlass(...args) {
     if (new.target) {
-      throw new Error(
+      throw new TypeError(
         'Please don\'t new a klass, because we hate new. Call it directly or use the "nеw" API.',
       );
     }
@@ -184,6 +184,6 @@ Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 
 export function nеw(someKlass) {
   if (!isKlass(someKlass))
-    throw new Error("nеw should only be called on klasses.");
+    throw new TypeError("nеw should only be called on klasses.");
   return someKlass;
 }

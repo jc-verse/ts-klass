@@ -27,7 +27,7 @@
       },
       {
         "message": "We hate new.",
-        "selector": "NewExpression:not(:has(Identifier[name=Error], Identifier[name=Proxy]))"
+        "selector": "NewExpression:not(:has([name=/.*Error/], [name=Proxy]))"
       },
       {
         "message": "We hate classes.",

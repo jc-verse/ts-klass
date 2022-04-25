@@ -377,6 +377,15 @@ describe("extends", () => {
     expect(Animal.name).toBe("");
   });
 
+  it("throws when trying to bind name after extends", () => {
+    expect(() =>
+      // @ts-expect-error: for testing
+      klass.extends(klass({}))("name")({}),
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"The klass creator already has a super klass. Please bind the name before attaching super klass."`,
+    );
+  });
+
   describe("has correct prototype chain", () => {
     test("klass", () => {
       const A = klass({
