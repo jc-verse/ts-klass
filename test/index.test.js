@@ -150,7 +150,7 @@ describe("klass constructor", () => {
   describe("has correct length value", () => {
     test("klass", () => {
       const Animal = klass({});
-      expect(Animal.length).toBe(1);
+      expect(Animal.length).toBe(0);
       const Animal2 = klass({
         constructor() {},
       });
@@ -164,9 +164,8 @@ describe("klass constructor", () => {
     });
 
     test("class", () => {
-      // class {} is a special case, because we provide a default constructor
-      // Not adding a conformance test for it
-
+      const Animal = class {};
+      expect(Animal.length).toBe(0);
       const Animal2 = class {
         constructor() {
           console.log("foo");

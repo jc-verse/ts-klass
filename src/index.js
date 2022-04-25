@@ -1,3 +1,17 @@
+// eslint-disable-next-line no-restricted-syntax
+const Constructors = new WeakMap();
+
+function defineProperties(obj, properties) {
+  properties.forEach(([key, value]) => {
+    Object.defineProperty(obj, key, {
+      value,
+      configurable: true,
+      enumerable: true,
+      writable: true,
+    });
+  });
+}
+
 function klassCreator(body, name, SuperKlass) {
   if (typeof body === "string") {
     if (name) {
@@ -17,21 +31,22 @@ function klassCreator(body, name, SuperKlass) {
 
   const constructor = Object.hasOwn(body, "constructor")
     ? (() => {
-        const constructor = body.constructor;
+        const customCtor = body.constructor;
         delete body.constructor;
+        function constructor(...args) {
+          // eslint-disable-next-line @typescript-eslint/no-invalid-this
+          defineProperties(this, instanceFields);
+          // eslint-disable-next-line @typescript-eslint/no-invalid-this
+          customCtor.apply(this, args);
+        }
+        Object.defineProperty(constructor, "length", {
+          value: customCtor.length,
+        });
         return constructor;
       })()
-    : function defaultConstructor(props) {
-        if (!props) return;
-        Object.keys(props).forEach((k) => {
-          // eslint-disable-next-line @typescript-eslint/no-invalid-this
-          Object.defineProperty(this, k, {
-            value: props[k],
-            configurable: true,
-            enumerable: true,
-            writable: true,
-          });
-        });
+    : function defaultConstructor(props = {}) {
+        // eslint-disable-next-line @typescript-eslint/no-invalid-this
+        defineProperties(this, [...instanceFields, ...Object.entries(props)]);
       };
 
   const [staticFields, instanceMethods, instanceFields] = Object.entries(
@@ -57,22 +72,11 @@ function klassCreator(body, name, SuperKlass) {
       );
     }
     const instance = Object.create(SomeKlass.prototype);
-    // Instance fields are defined on the instance
-    instanceFields.forEach(([key, value]) => {
-      // TODO `SuperKlass` should probably not be called directly (otherwise it
-      // creates an extra `instance` object that's basically unused)... We need
-      // to expose `SuperKlass.constructor` (also needed for `super.construct`)
-      Object.defineProperty(this ?? instance, key, {
-        value,
-        configurable: true,
-        enumerable: true,
-        writable: true,
-      });
-    });
-    SuperKlass?.apply(instance, args);
+    Constructors.get(SuperKlass)?.apply(instance, args);
     constructor.apply(instance, args);
     return instance;
   }
+  Constructors.set(SomeKlass, constructor);
   if (SuperKlass) {
     Object.setPrototypeOf(SomeKlass, SuperKlass);
     Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
