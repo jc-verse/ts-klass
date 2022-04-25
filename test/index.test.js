@@ -376,13 +376,9 @@ describe("extends", () => {
       expect(Object.getPrototypeOf(b)).toBe(B.prototype);
       expect(Object.getPrototypeOf(Object.getPrototypeOf(b))).toBe(A.prototype);
       expect(Object.getPrototypeOf(a)).toBe(A.prototype);
-      // TODO: class fields should be on instance, not prototype
-      // expect(Object.getOwnPropertyNames(b)).toEqual(["f", "fa", "fb"]);
+      expect(Object.getOwnPropertyNames(b).sort()).toEqual(["f", "fa", "fb"]);
       expect(Object.getOwnPropertyNames(Object.getPrototypeOf(b))).toEqual([
         "constructor",
-        // TODO: class fields should be on instance, not prototype
-        "f",
-        "fb",
         "m",
         "mb",
       ]);
@@ -390,14 +386,7 @@ describe("extends", () => {
         Object.getOwnPropertyNames(
           Object.getPrototypeOf(Object.getPrototypeOf(b)),
         ),
-      ).toEqual([
-        "constructor",
-        // TODO: class fields should be on instance, not prototype
-        "f",
-        "fa",
-        "m",
-        "ma",
-      ]);
+      ).toEqual(["constructor", "m", "ma"]);
       expect(Object.getOwnPropertyNames(B)).toEqual([
         "length",
         "name",

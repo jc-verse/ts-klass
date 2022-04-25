@@ -34,15 +34,20 @@ function klassCreator(body, name, SuperKlass) {
         });
       };
 
-  const [staticFields, instanceFields] = Object.entries(body).reduce(
+  const [staticFields, instanceMethods, instanceFields] = Object.entries(
+    body,
+  ).reduce(
     (acc, [key, value]) => {
       const trimmedKey = key.trim();
       if (trimmedKey.startsWith("static "))
         acc[0].push([trimmedKey.replace(/^static /, "").trim(), value]);
-      else acc[1].push([key, value]);
+      // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
+      // differentiated, the latter is still a class field, not a method
+      else if (typeof value === "function") acc[1].push([key, value]);
+      else acc[2].push([key, value]);
       return acc;
     },
-    [[], []],
+    [[], [], []],
   );
 
   function SomeKlass(...args) {
@@ -52,6 +57,18 @@ function klassCreator(body, name, SuperKlass) {
       );
     }
     const instance = Object.create(SomeKlass.prototype);
+    // Instance fields are defined on the instance
+    instanceFields.forEach(([key, value]) => {
+      // TODO `SuperKlass` should probably not be called directly (otherwise it
+      // creates an extra `instance` object that's basically unused)... We need
+      // to expose `SuperKlass.constructor` (also needed for `super.construct`)
+      Object.defineProperty(this ?? instance, key, {
+        value,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+    });
     SuperKlass?.apply(instance, args);
     constructor.apply(instance, args);
     return instance;
@@ -64,8 +81,8 @@ function klassCreator(body, name, SuperKlass) {
   staticFields.forEach(([key, value]) => {
     SomeKlass[key] = value;
   });
-  // Instance fields are defined on constructor.prototype
-  instanceFields.forEach(([key, value]) => {
+  // Instance methods are defined on constructor.prototype
+  instanceMethods.forEach(([key, value]) => {
     SomeKlass.prototype[key] = value;
   });
   Object.defineProperty(SomeKlass, "name", { value: name });
