@@ -1,40 +1,30 @@
 type StaticKeys<K> = K extends `static ${string}` ? K : never;
 type StripStatic<K> = K extends `static ${infer U}` ? U : never;
 
-type Static<T extends object> = Pick<T, StaticKeys<keyof T>> extends infer U
-  ? { [K in keyof U as StripStatic<K>]: U[K] }
-  : never;
+type Static<T extends object> = { [K in keyof T as StripStatic<K>]: T[K] };
 
 type Instance<T extends object> = Omit<T, StaticKeys<keyof T>>;
 
 declare const klassMarker: unique symbol;
 
-type Klass<Body extends object> = Static<Body> &
-  (<U extends object>(
-    props?: U & ThisType<Instance<Body>>,
-  ) => Instance<Body> & U) & {
-    [klassMarker]: true;
-  };
+type Klass<Body extends object> = Static<Body> & {
+  [klassMarker]: true;
+} & (Body extends { constructor: (...args: never) => void }
+    ? (
+        this: ThisParameterType<Body["constructor"] & Instance<Body>>,
+        ...args: Parameters<Body["constructor"]>
+      ) => Instance<Omit<Body, "constructor">> &
+        ThisParameterType<Body["constructor"]>
+    : <U extends object>(
+        props?: U & ThisType<Instance<Body>>,
+      ) => Instance<Body> & U);
 
-type KlassWithCtor<Body extends { constructor: (...args: never) => void }> =
-  Static<Body> &
-    ((
-      this: ThisParameterType<Body["constructor"] & Instance<Body>>,
-      ...args: Parameters<Body["constructor"]>
-    ) => Instance<Body> & ThisParameterType<Body["constructor"]>) & {
-      [klassMarker]: true;
-    };
-
-declare type KlassWithName = {
-  <Body extends { constructor: (...args: never) => void }>(
-    body: Body & ThisType<any>,
-  ): KlassWithCtor<Body>;
+type KlassCreator = {
   <Body extends object>(body: Body & ThisType<any>): Klass<Body>;
-  extends: ((SuperKlass: Klass<any>) => KlassWithName) &
-    ((SuperKlass: KlassWithCtor<any>) => KlassWithName);
+  extends: (SuperKlass: Klass<any>) => KlassCreator;
 };
-declare const klass: KlassWithName &
-  ((name: string) => KlassWithName & { boundName: string });
+
+declare const klass: KlassCreator & ((name: string) => KlassCreator);
 
 export function nеw<T extends Klass<object>>(someKlass: T): T;
 export function isKlass(maybeKlass: unknown): maybeKlass is Klass<object>;

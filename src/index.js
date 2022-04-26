@@ -150,25 +150,12 @@ function klassCreator(body, name, SuperKlass) {
   return SomeKlass;
 }
 
-function bindKlassName(klassCtor, name) {
-  Object.defineProperty(klassCtor, "boundName", {
-    value: name,
-    configurable: false,
-    enumerable: true,
-    writable: false,
-  });
-}
-
 export default function klass(bodyOrName) {
   if (typeof bodyOrName === "string") {
     const nameBoundKlassCreator = (body) =>
       klassCreator(body, bodyOrName, null);
-    nameBoundKlassCreator.extends = (SuperKlass) => {
-      const creator = (body) => klassCreator(body, bodyOrName, SuperKlass);
-      bindKlassName(creator, bodyOrName);
-      return creator;
-    };
-    bindKlassName(nameBoundKlassCreator, bodyOrName);
+    nameBoundKlassCreator.extends = (SuperKlass) => (body) =>
+      klassCreator(body, bodyOrName, SuperKlass);
     return nameBoundKlassCreator;
   }
   return klassCreator(bodyOrName, "", null);

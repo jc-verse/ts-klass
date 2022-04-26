@@ -156,6 +156,10 @@ describe("klass constructor", () => {
       });
       expect(Animal2.length).toBe(0);
       const Animal3 = klass({
+        /**
+         * @param {string} foo
+         * @param {string} bar
+         */
         constructor(foo, bar) {
           console.log(foo, bar);
         },
@@ -284,7 +288,6 @@ describe("name", () => {
       const animalKlassCreator = klass("Animal");
       const Animal = animalKlassCreator({});
       const dog = Animal();
-      expect(animalKlassCreator.boundName).toBe("Animal");
       expect(isKlass(Animal)).toBe(true);
       expect(Animal.name).toBe("Animal");
       expect(dog).not.toHaveProperty("name");
@@ -668,7 +671,9 @@ describe("nеw", () => {
 
   it("doesn't new non-klasses", () => {
     const Animal = () => ({
+      /** @returns {string} */
       makeSound() {
+        // @ts-expect-error: it actually won't work
         return this.sound;
       },
     });

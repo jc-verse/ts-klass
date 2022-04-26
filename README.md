@@ -254,8 +254,6 @@ Still, this module has been fully tested and follows ECMAScript semantics (where
 
 This project is still in its early infancy.
 
-1. Typings
-2. Private methods/fields
-3. Extends/implements
-4. Abstract klasses
-5. Builder pattern?
+1. Private methods/fields
+2. Interfaces
+3. Abstract klasses
