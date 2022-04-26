@@ -35,6 +35,7 @@ describe("klass constructor", () => {
     expect(() => klass(1)).toThrowErrorMatchingInlineSnapshot(
       `"You can't create a klass with a non-object body."`,
     );
+    // @ts-expect-error: for testing
     expect(() => klass(null)).toThrowErrorMatchingInlineSnapshot(
       `"You can't create a klass with a non-object body."`,
     );
@@ -173,6 +174,10 @@ describe("klass constructor", () => {
       };
       expect(Animal2.length).toBe(0);
       const Animal3 = class {
+        /**
+         * @param {string} foo
+         * @param {string} bar
+         */
         constructor(foo, bar) {
           console.log(foo, bar);
         }
@@ -196,10 +201,8 @@ describe("static field", () => {
       },
     });
     expect(Animal.greet()).toBe("hello");
-    // @ts-expect-error: this is not worth typing, but it's supported
-    expect(Animal.greet2()).toBe("hello again");
-    // @ts-expect-error: this is not worth typing, but it's supported
-    expect(Animal.greet3()).toBe("yep still me");
+    expect(Animal["   greet2"]()).toBe("hello again");
+    expect(Object.keys(Animal).length).toBe(2);
   });
 
   describe("is removed from instances", () => {
@@ -457,13 +460,13 @@ describe("extends", () => {
         static sma() {}
       }
       class B extends A {
-        f = 2;
+        /** @override */ f = 2;
         fb = 2;
-        m() {}
+        /** @override */ m() {}
         mb() {}
-        static sf = 2;
+        /** @override */ static sf = 2;
         static sfb = 2;
-        static sm() {}
+        /** @override */ static sm() {}
         static smb() {}
       }
       const a = new A();
@@ -601,12 +604,13 @@ describe("super call", () => {
     test("class", () => {
       let foo = undefined;
       const Entity = class {
+        /** @type {number | undefined} */ a;
         constructor() {
           foo = this.a;
         }
       };
       const Animal = class extends Entity {
-        a = 1;
+        /** @override */ a = 1;
       };
       new Animal();
       expect(foo).toBe(undefined);

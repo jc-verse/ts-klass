@@ -2,6 +2,9 @@
   "extends": "tsconfig-jc",
   "compilerOptions": {
     "lib": ["esnext"],
-    "types": ["jest", "node"]
+    "types": ["jest", "node"],
+    "target": "esnext",
+    "noEmit": true,
+    "allowJs": true
   }
 }

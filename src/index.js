@@ -17,9 +17,8 @@ function splitBody(body) {
     instanceFields = [],
     instanceMethods = [];
   Object.entries(body).forEach(([key, value]) => {
-    const trimmedKey = key.trim();
-    if (trimmedKey.startsWith("static "))
-      staticFields.push([trimmedKey.replace(/^static /, "").trim(), value]);
+    if (key.startsWith("static "))
+      staticFields.push([key.replace(/^static /, ""), value]);
     // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
     // differentiated, the latter is still a class field, not a method
     else if (typeof value === "function") instanceMethods.push([key, value]);
@@ -44,6 +43,8 @@ function klassCreator(body, name, SuperKlass) {
     throw new TypeError("You can't create a klass with a non-object body.");
   if (SuperKlass && !isKlass(SuperKlass))
     throw new TypeError("You can only extend klasses.");
+
+  const { staticFields, instanceMethods, instanceFields } = splitBody(body);
 
   let superBeenCalled = false;
 
@@ -130,7 +131,6 @@ function klassCreator(body, name, SuperKlass) {
       }),
     );
   }
-  const { staticFields, instanceMethods, instanceFields } = splitBody(body);
 
   // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {
