@@ -67,6 +67,7 @@ describe("klass constructor", () => {
 
   describe("assigns prototype correctly", () => {
     test("klass", () => {
+      expect({ __proto__: { a: 1 } }).toHaveProperty("a");
       const Animal = klass({
         makeSound() {
           return this.sound;
@@ -102,7 +103,7 @@ describe("klass constructor", () => {
       const KlassClone = klass(new RealClass());
       const instance = KlassClone();
       expect(instance.a).toBe(1);
-      expect("foo" in instance).toBe(false);
+      expect(instance).not.toHaveProperty("foo");
       expect(Object.getPrototypeOf(Object.getPrototypeOf(instance))).toBe(
         Object.prototype,
       );
@@ -120,17 +121,15 @@ describe("klass constructor", () => {
     test("klass", () => {
       const Animal = klass({});
       const cat = Animal();
-      expect(cat instanceof Animal).toBe(true);
-      expect(cat instanceof Function).toBe(false);
-      expect(cat instanceof Object).toBe(true);
+      expect(cat).toBeInstanceOf(Animal);
+      expect(cat).not.toBeInstanceOf(Function);
     });
 
     test("class", () => {
       const Animal = class {};
       const cat = new Animal();
-      expect(cat instanceof Animal).toBe(true);
-      expect(cat instanceof Function).toBe(false);
-      expect(cat instanceof Object).toBe(true);
+      expect(cat).toBeInstanceOf(Animal);
+      expect(cat).not.toBeInstanceOf(Function);
     });
   });
 
@@ -213,8 +212,8 @@ describe("static field", () => {
         },
       });
       const dog = Animal();
-      expect("greet" in dog).toBe(false);
-      expect("static greet" in dog).toBe(false);
+      expect(dog).not.toHaveProperty("greet");
+      expect(dog).not.toHaveProperty("static greet");
     });
 
     test("class", () => {
@@ -224,7 +223,7 @@ describe("static field", () => {
         }
       };
       const dog = new Animal();
-      expect("greet" in dog).toBe(false);
+      expect(dog).not.toHaveProperty("greet");
     });
   });
 
@@ -288,14 +287,14 @@ describe("name", () => {
       expect(animalKlassCreator.boundName).toBe("Animal");
       expect(isKlass(Animal)).toBe(true);
       expect(Animal.name).toBe("Animal");
-      expect("name" in dog).toBe(false);
+      expect(dog).not.toHaveProperty("name");
     });
 
     test("class", () => {
       const Animal = class {};
       const dog = new Animal();
       expect(Animal.name).toBe("Animal");
-      expect("name" in dog).toBe(false);
+      expect(dog).not.toHaveProperty("name");
     });
   });
 
@@ -652,9 +651,8 @@ describe("isKlass", () => {
 
   it("can be substituted with instanceof", () => {
     const Animal = klass({});
-    expect(Animal instanceof klass).toBe(true);
-    expect(Animal instanceof Function).toBe(true);
-    expect(Animal instanceof Object).toBe(true);
+    expect(Animal).toBeInstanceOf(klass);
+    expect(Animal).toBeInstanceOf(Function);
   });
 });
 
