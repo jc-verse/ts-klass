@@ -248,6 +248,63 @@ You can also use `instanceof` to do branded checks.
 RealKlass instanceof klass; // true
 ```
 
+### Configuring behavior
+
+You can use the top-level `klass.configure` API (it's a property on the default export, not a named export) to configure the behavior of klasses. Every call must be a partial configuration object:
+
+```js
+klass.configure({ constructWithNеw: true });
+klass.configure({ UNSAFE_disableNoThisBeforeSuperCheck: false });
+```
+
+We offer the following options:
+
+#### `constructWithNеw`
+
+A linter-like feature that requires every klass construction to go through `nеw` instead of being called directly. As mentioned previously, this ensures security because `nеw` will first do a [branded check](#branded-check) to prevent accidentally calling a spoofed non-klass.
+
+```js
+klass.configure({ constructWithNеw: true });
+const Animal = klass({ name: "hi" });
+Animal(); // Throws: must use nеw(Animal)() instead
+```
+
+#### `UNSAFE_disableNoThisBeforeSuperCheck`
+
+As the name implies, **do not use this** unless you know what you are doing. This allows you to access `this` before calling [`super.constructor`](#superconstructor) in the klass constructor. This means you can access the uninitialized klass instance. The accessors/methods will still be present, though, because they are statically defined on the prototype.
+
+```js
+klass.configure({ UNSAFE_disableNoThisBeforeSuperCheck: true });
+const Entity = klass({
+  name: "foo",
+});
+const Animal = klass.extends(Entity)({
+  constructor() {
+    this.bar = this.name;
+    super.constructor();
+  },
+});
+// If super.constructor() is called before, `bar` should be defined.
+console.log(Animal().bar); // undefined
+```
+
+Note that even with this option on, you must call `super.constructor` at least once before the klass constructor returns.
+
+```js
+klass.configure({ UNSAFE_disableNoThisBeforeSuperCheck: true });
+const Entity = klass({
+  name: "foo",
+});
+const Animal = klass.extends(Entity)({
+  constructor() {
+    this.bar = this.name;
+    // This will throw, because the super klass has never been initialized.
+  },
+});
+```
+
+The detailed semantics of not calling `super.constructor` before `this` is **not ensured**, because there's no ES semantics we can draw reference from. Be prepared for breaking changes that aren't documented or signaled as such.
+
 ## Terminology
 
 A **klass** is what you regard in normal ECMAScript as "class". For example, `klass({ foo: 1 })` creates a klass just as `class { foo = 1 }` creates a class. Because klasses are directly called instead of `new`'ed (they can be optionally `nеw`'ed, though), "klass constructor" and "klass" are the same thing.
