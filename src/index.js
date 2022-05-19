@@ -15,6 +15,7 @@ function splitBody(body) {
     instanceMethods = [];
   Object.entries(Object.getOwnPropertyDescriptors(body)).forEach(
     ([key, value]) => {
+      if (!value.enumerable) return;
       if (key.startsWith("static "))
         staticFields.push([key.replace(/^static /, ""), value]);
       // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be

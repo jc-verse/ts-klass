@@ -1,6 +1,6 @@
 {
   "name": "ts-klass",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Type-strong klasses",
   "main": "src/index.js",
   "types": "src/index.d.ts",

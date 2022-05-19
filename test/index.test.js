@@ -75,6 +75,13 @@ describe("klass constructor", () => {
     expect(cat.name).toBe("Fiona");
   });
 
+  it("ignores non-enumerable properties", () => {
+    const body = {};
+    Object.defineProperty(body, "hidden", { value: 1 });
+    const Animal = klass(body);
+    expect(Animal().hidden).toBe(undefined);
+  });
+
   describe("accepts getters & setters", () => {
     test("klass", () => {
       const Animal = klass({
