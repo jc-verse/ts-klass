@@ -209,6 +209,26 @@ const Animal = animalKlassCtor("Dog")({
 });
 ```
 
+### Accessors
+
+You can use accessors in the klass body, and they behave as you would expect.
+
+```js
+const Animal = klass({
+  a: 1,
+  get b() {
+    return this.a;
+  },
+  "static c": 1,
+  get "static d"() {
+    return this.c;
+  },
+});
+
+console.log(Animal().b);
+console.log(Animal.d);
+```
+
 ### Branded check
 
 A klass is not an ECMAScript class (because everyone hates it). When you use `klass.extends(SomeKlass)` or `nеw(SomeKlass)`, `SomeKlass` must be a klass constructed from the `klass()` function. You can check if something is a klass (and therefore can be extended or `nеw`'ed) with `isKlass(SomeKlass)`.

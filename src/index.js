@@ -4,35 +4,26 @@ const Constructors = new WeakMap();
 const config = new Map();
 
 function addProperties(obj, properties) {
-  console.log(config.get("useSetForKlassFields"));
-  if (config.get("useSetForKlassFields")) {
-    properties.forEach(([key, value]) => {
-      obj[key] = value;
-    });
-  } else {
-    properties.forEach(([key, value]) => {
-      Object.defineProperty(obj, key, {
-        value,
-        configurable: true,
-        enumerable: true,
-        writable: true,
-      });
-    });
-  }
+  properties.forEach(([key, value]) => {
+    Object.defineProperty(obj, key, value);
+  });
 }
 
 function splitBody(body) {
   const staticFields = [],
     instanceFields = [],
     instanceMethods = [];
-  Object.entries(body).forEach(([key, value]) => {
-    if (key.startsWith("static "))
-      staticFields.push([key.replace(/^static /, ""), value]);
-    // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
-    // differentiated, the latter is still a class field, not a method
-    else if (typeof value === "function") instanceMethods.push([key, value]);
-    else instanceFields.push([key, value]);
-  });
+  Object.entries(Object.getOwnPropertyDescriptors(body)).forEach(
+    ([key, value]) => {
+      if (key.startsWith("static "))
+        staticFields.push([key.replace(/^static /, ""), value]);
+      // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
+      // differentiated, the latter is still a class field, not a method
+      else if (typeof value.value === "function" || value.get || value.set)
+        instanceMethods.push([key, value]);
+      else instanceFields.push([key, value]);
+    },
+  );
   return { staticFields, instanceFields, instanceMethods };
 }
 
@@ -103,7 +94,10 @@ function klassCreator(body, name, SuperKlass) {
     : function defaultConstructor(props = {}) {
         Constructors.get(SuperKlass)?.apply(this, props);
         addProperties(this, instanceFields);
-        addProperties(this, Object.entries(props));
+        addProperties(
+          this,
+          Object.entries(Object.getOwnPropertyDescriptors(props)),
+        );
         return this;
       };
 
@@ -155,11 +149,11 @@ function klassCreator(body, name, SuperKlass) {
 
   // Static fields are defined on the constructor
   staticFields.forEach(([key, value]) => {
-    SomeKlass[key] = value;
+    Object.defineProperty(SomeKlass, key, value);
   });
   // Instance methods are defined on constructor.prototype
   instanceMethods.forEach(([key, value]) => {
-    SomeKlass.prototype[key] = value;
+    Object.defineProperty(SomeKlass.prototype, key, value);
   });
   Object.defineProperty(SomeKlass, "name", { value: name });
   Object.defineProperty(SomeKlass, "length", { value: constructor.length });

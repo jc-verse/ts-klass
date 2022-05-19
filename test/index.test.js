@@ -75,6 +75,69 @@ describe("klass constructor", () => {
     expect(cat.name).toBe("Fiona");
   });
 
+  describe("accepts getters & setters", () => {
+    test("klass", () => {
+      const Animal = klass({
+        get name() {
+          return 1;
+        },
+        set name(val) {},
+      });
+      const dog = Animal();
+      expect(Object.hasOwn(dog, "name")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(dog), "name")).toBe(true);
+      expect(dog.name).toBe(1);
+
+      const SubAnimal = klass.extends(Animal)({
+        get name2() {
+          return 2;
+        },
+        set name2(val) {},
+      });
+      const subDog = SubAnimal();
+      expect(Object.hasOwn(subDog, "name2")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(subDog), "name2")).toBe(true);
+      expect(
+        Object.hasOwn(
+          Object.getPrototypeOf(Object.getPrototypeOf(subDog)),
+          "name",
+        ),
+      ).toBe(true);
+      expect(subDog.name).toBe(1);
+      expect(subDog.name2).toBe(2);
+    });
+    test("class", () => {
+      const Animal = class {
+        get name() {
+          return 1;
+        }
+        set name(val) {}
+      };
+      const dog = new Animal();
+      expect(Object.hasOwn(dog, "name")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(dog), "name")).toBe(true);
+      expect(new Animal().name).toBe(1);
+
+      const SubAnimal = class extends Animal {
+        get name2() {
+          return 2;
+        }
+        set name2(val) {}
+      };
+      const subDog = new SubAnimal();
+      expect(Object.hasOwn(subDog, "name2")).toBe(false);
+      expect(Object.hasOwn(Object.getPrototypeOf(subDog), "name2")).toBe(true);
+      expect(
+        Object.hasOwn(
+          Object.getPrototypeOf(Object.getPrototypeOf(subDog)),
+          "name",
+        ),
+      ).toBe(true);
+      expect(subDog.name).toBe(1);
+      expect(subDog.name2).toBe(2);
+    });
+  });
+
   describe("assigns prototype correctly", () => {
     test("klass", () => {
       expect({ __proto__: { a: 1 } }).toHaveProperty("a");

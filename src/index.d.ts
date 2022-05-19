@@ -26,7 +26,6 @@ type KlassCreator = {
 
 type Config = {
   constructWithNеw?: boolean;
-  useSetForKlassFields?: boolean;
   UNSAFE_disableNoThisBeforeSuperCheck?: boolean;
 };
 
