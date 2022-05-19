@@ -2,3 +2,4 @@ klass
 klasses
 newed
 nеws
+nеwed

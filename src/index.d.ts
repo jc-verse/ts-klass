@@ -24,7 +24,16 @@ type KlassCreator = {
   extends: (SuperKlass: Klass<any>) => KlassCreator;
 };
 
-declare const klass: KlassCreator & ((name: string) => KlassCreator);
+type Config = {
+  constructWithNеw?: boolean;
+  useSetForKlassFields?: boolean;
+  UNSAFE_disableNoThisBeforeSuperCheck?: boolean;
+};
+
+declare const klass: KlassCreator &
+  ((name: string) => KlassCreator) & {
+    configure: (options: Partial<Config>) => void;
+  };
 
 export function nеw<T extends Klass<object>>(someKlass: T): T;
 export function isKlass(maybeKlass: unknown): maybeKlass is Klass<object>;

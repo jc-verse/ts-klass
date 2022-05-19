@@ -30,6 +30,16 @@ describe("klass constructor", () => {
     );
   });
 
+  it("throws a better message when constructWithNеw is enabled", () => {
+    klass.configure({ constructWithNеw: true });
+    const Animal = klass({ a: 1 });
+    // @ts-expect-error: for testing
+    expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
+      `"Please don't new a klass, because we hate new. Use the \\"nеw\\" API instead. "`,
+    );
+    klass.configure({ constructWithNеw: false });
+  });
+
   it("throws if trying to create a klass with a primitive as body", () => {
     // @ts-expect-error: for testing
     expect(() => klass(1)).toThrowErrorMatchingInlineSnapshot(
@@ -683,5 +693,42 @@ describe("nеw", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"nеw should only be called on klasses."`,
     );
+  });
+});
+
+describe("configure", () => {
+  describe("constructWithNеw", () => {
+    beforeAll(() => klass.configure({ constructWithNеw: true }));
+    afterAll(() => klass.configure({ constructWithNеw: false }));
+    it("forbids directly invoking a klass constructor", () => {
+      expect(() => klass({})()).toThrowErrorMatchingInlineSnapshot(
+        `"Klass constructors must be invoked with \\"nеw\\" because you have enabled the \\"constructWithNеw\\" option."`,
+      );
+    });
+    it("still allows using nеw", () => {
+      expect(nеw(klass({}))({ a: 1 })).toEqual({ a: 1 });
+    });
+  });
+
+  describe("UNSAFE_disableNoThisBeforeSuperCheck", () => {
+    beforeAll(() =>
+      klass.configure({ UNSAFE_disableNoThisBeforeSuperCheck: true }),
+    );
+    afterAll(() =>
+      klass.configure({ UNSAFE_disableNoThisBeforeSuperCheck: false }),
+    );
+    it("allows accessing this before super.constructor, even when it leads to weird behaviors", () => {
+      const Entity = klass({
+        name: "foo",
+      });
+      const Animal = klass.extends(Entity)({
+        constructor() {
+          this.bar = this.name;
+          super.constructor();
+        },
+      });
+      // If super.constructor() is called before, `bar` should be defined.
+      expect(Animal()).toEqual({ name: "foo" });
+    });
   });
 });

@@ -1,15 +1,24 @@
 // eslint-disable-next-line no-restricted-syntax
 const Constructors = new WeakMap();
+// eslint-disable-next-line no-restricted-syntax
+const config = new Map();
 
-function defineProperties(obj, properties) {
-  properties.forEach(([key, value]) => {
-    Object.defineProperty(obj, key, {
-      value,
-      configurable: true,
-      enumerable: true,
-      writable: true,
+function addProperties(obj, properties) {
+  console.log(config.get("useSetForKlassFields"));
+  if (config.get("useSetForKlassFields")) {
+    properties.forEach(([key, value]) => {
+      obj[key] = value;
     });
-  });
+  } else {
+    properties.forEach(([key, value]) => {
+      Object.defineProperty(obj, key, {
+        value,
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      });
+    });
+  }
 }
 
 function splitBody(body) {
@@ -55,7 +64,10 @@ function klassCreator(body, name, SuperKlass) {
         Object.getOwnPropertyNames(Reflect).map((k) => [
           k,
           (...opArgs) => {
-            if (!superBeenCalled) {
+            if (
+              !superBeenCalled &&
+              !config.get("UNSAFE_disableNoThisBeforeSuperCheck")
+            ) {
               throw new ReferenceError(
                 `You must call super.constructor() in derived klass before performing '${k}' on 'this'.`,
               );
@@ -73,7 +85,7 @@ function klassCreator(body, name, SuperKlass) {
         delete body.constructor;
         return new Proxy(customCtor, {
           apply(target, thisArg, args) {
-            defineProperties(thisArg, instanceFields);
+            addProperties(thisArg, instanceFields);
             Reflect.apply(
               target,
               SuperKlass ? createGuardedThisArg(thisArg) : thisArg,
@@ -90,15 +102,24 @@ function klassCreator(body, name, SuperKlass) {
       })()
     : function defaultConstructor(props = {}) {
         Constructors.get(SuperKlass)?.apply(this, props);
-        defineProperties(this, instanceFields);
-        defineProperties(this, Object.entries(props));
+        addProperties(this, instanceFields);
+        addProperties(this, Object.entries(props));
         return this;
       };
 
   function SomeKlass(...args) {
     if (new.target) {
       throw new TypeError(
-        'Please don\'t new a klass, because we hate new. Call it directly or use the "nеw" API.',
+        `Please don't new a klass, because we hate new. ${
+          config.get("constructWithNеw")
+            ? 'Use the "nеw" API instead. '
+            : 'Call it directly or use the "nеw" API.'
+        }`,
+      );
+    }
+    if (config.get("constructWithNеw") && !SomeKlass[hasBeenNеwedMarker]) {
+      throw new TypeError(
+        'Klass constructors must be invoked with "nеw" because you have enabled the "constructWithNеw" option.',
       );
     }
     const instance = Object.create(SomeKlass.prototype);
@@ -163,7 +184,14 @@ export default function klass(bodyOrName) {
 
 klass.extends = (SuperKlass) => (body) => klassCreator(body, "", SuperKlass);
 
+klass.configure = (options) =>
+  Object.entries(options).forEach(([k, v]) => {
+    config.set(k, v);
+  });
+
 const klassMarker = Symbol("klass");
+
+const hasBeenNеwedMarker = Symbol("nеwed");
 
 export const isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
 
@@ -172,5 +200,6 @@ Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 export function nеw(someKlass) {
   if (!isKlass(someKlass))
     throw new TypeError("nеw should only be called on klasses.");
+  someKlass[hasBeenNеwedMarker] = true;
   return someKlass;
 }
