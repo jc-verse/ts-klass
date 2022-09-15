@@ -20,7 +20,11 @@
     "prepare": "husky install",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
+  "peerDependencies": {
+    "@babel/core": "^7.19.1"
+  },
   "devDependencies": {
+    "@babel/core": "^7.19.1",
     "@types/jest": "^29.0.2",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "@typescript-eslint/parser": "^5.37.0",
@@ -38,6 +42,11 @@
   },
   "engines": {
     "node": ">= 16"
+  },
+  "peerDependenciesMeta": {
+    "@babel/core": {
+      "optional": true
+    }
   },
   "packageManager": "yarn@3.2.0"
 }
