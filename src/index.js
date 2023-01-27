@@ -1,7 +1,7 @@
-// eslint-disable-next-line no-restricted-syntax
-const Constructors = new WeakMap();
-// eslint-disable-next-line no-restricted-syntax
+/* eslint-disable no-restricted-syntax */
+const Klasses = new WeakMap();
 const config = new Map();
+/* eslint-enable no-restricted-syntax */
 
 function addProperties(obj, properties) {
   properties.forEach(([key, value]) => {
@@ -75,25 +75,28 @@ function klassCreator(body, name, SuperKlass) {
     ? (() => {
         const customCtor = body.constructor;
         delete body.constructor;
-        return new Proxy(customCtor, {
-          apply(target, thisArg, args) {
-            addProperties(thisArg, instanceFields);
-            Reflect.apply(
-              target,
-              SuperKlass ? createGuardedThisArg(thisArg) : thisArg,
-              args,
+        function wrappedCtor(...args) {
+          addProperties(this, instanceFields);
+          Reflect.apply(
+            customCtor,
+            SuperKlass ? createGuardedThisArg(this) : this,
+            args,
+          );
+          if (SuperKlass && !superBeenCalled) {
+            throw new ReferenceError(
+              "You must call super.constructor() in derived klass before returning from derived constructor.",
             );
-            if (SuperKlass && !superBeenCalled) {
-              throw new ReferenceError(
-                "You must call super.constructor() in derived klass before returning from derived constructor.",
-              );
-            }
-            return thisArg;
-          },
+          }
+          return this;
+        }
+        Object.defineProperties(wrappedCtor, {
+          name: { value: customCtor.name },
+          length: { value: customCtor.length },
         });
+        return wrappedCtor;
       })()
     : function defaultConstructor(props = {}) {
-        Constructors.get(SuperKlass)?.apply(this, props);
+        Klasses.get(SuperKlass)?.apply(this, props);
         addProperties(this, instanceFields);
         addProperties(
           this,
@@ -112,7 +115,10 @@ function klassCreator(body, name, SuperKlass) {
         }`,
       );
     }
-    if (config.get("constructWithNеw") && !SomeKlass[hasBeenNеwedMarker]) {
+    if (
+      config.get("constructWithNеw") &&
+      !Klasses.get(SomeKlass).hasBeenNеwed
+    ) {
       throw new TypeError(
         'Klass constructors must be invoked with "nеw" because you have enabled the "constructWithNеw" option.',
       );
@@ -121,7 +127,7 @@ function klassCreator(body, name, SuperKlass) {
     constructor.apply(instance, args);
     return instance;
   }
-  Constructors.set(SomeKlass, constructor);
+  Klasses.set(SomeKlass, constructor);
   if (SuperKlass) {
     Object.setPrototypeOf(SomeKlass, SuperKlass);
     Object.setPrototypeOf(SomeKlass.prototype, SuperKlass.prototype);
@@ -136,7 +142,7 @@ function klassCreator(body, name, SuperKlass) {
           // SuperKlass.prototype.constructor is actually SuperKlass itself, but
           // we proxy it to the constructor function, so that we can support
           // calling `super()` through `super.constructor()`
-          return new Proxy(Constructors.get(SuperKlass), {
+          return new Proxy(Klasses.get(SuperKlass), {
             apply(ctor, thisArg, args) {
               superBeenCalled = true;
               Reflect.apply(ctor, thisArg, args);
@@ -156,13 +162,13 @@ function klassCreator(body, name, SuperKlass) {
   instanceMethods.forEach(([key, value]) => {
     Object.defineProperty(SomeKlass.prototype, key, value);
   });
-  Object.defineProperty(SomeKlass, "name", { value: name });
-  Object.defineProperty(SomeKlass, "length", { value: constructor.length });
+  Object.defineProperties(SomeKlass, {
+    name: { value: name },
+    length: { value: constructor.length },
+  });
   Object.defineProperty(SomeKlass.prototype, Symbol.toStringTag, {
     value: name || "Object",
   });
-  // Brand for the newly created klass
-  SomeKlass[klassMarker] = true;
   return SomeKlass;
 }
 
@@ -184,17 +190,13 @@ klass.configure = (options) =>
     config.set(k, v);
   });
 
-const klassMarker = Symbol("klass");
-
-const hasBeenNеwedMarker = Symbol("nеwed");
-
-export const isKlass = (maybeKlass) => Boolean(maybeKlass[klassMarker]);
+export const isKlass = (maybeKlass) => Klasses.has(maybeKlass);
 
 Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 
 export function nеw(someKlass) {
   if (!isKlass(someKlass))
     throw new TypeError("nеw should only be called on klasses.");
-  someKlass[hasBeenNеwedMarker] = true;
+  Klasses.get(someKlass).hasBeenNеwed = true;
   return someKlass;
 }

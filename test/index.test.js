@@ -26,7 +26,7 @@ describe("klass constructor", () => {
     const Animal = klass({ a: 1 });
     // @ts-expect-error: for testing
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
-      `"Please don't new a klass, because we hate new. Call it directly or use the \\"nеw\\" API."`,
+      `"Please don't new a klass, because we hate new. Call it directly or use the "nеw" API."`,
     );
   });
 
@@ -35,7 +35,7 @@ describe("klass constructor", () => {
     const Animal = klass({ a: 1 });
     // @ts-expect-error: for testing
     expect(() => new Animal()).toThrowErrorMatchingInlineSnapshot(
-      `"Please don't new a klass, because we hate new. Use the \\"nеw\\" API instead. "`,
+      `"Please don't new a klass, because we hate new. Use the "nеw" API instead. "`,
     );
     klass.configure({ constructWithNеw: false });
   });
@@ -396,7 +396,7 @@ describe("name", () => {
   it("is forbidden to be re-bound", () => {
     // @ts-expect-error: for testing
     expect(() => klass("foo")("bar")({})).toThrowErrorMatchingInlineSnapshot(
-      `"The klass creator already has a name bound as \\"foo\\". You can't re-write its name."`,
+      `"The klass creator already has a name bound as "foo". You can't re-write its name."`,
     );
   });
 
@@ -772,7 +772,7 @@ describe("configure", () => {
     afterAll(() => klass.configure({ constructWithNеw: false }));
     it("forbids directly invoking a klass constructor", () => {
       expect(() => klass({})()).toThrowErrorMatchingInlineSnapshot(
-        `"Klass constructors must be invoked with \\"nеw\\" because you have enabled the \\"constructWithNеw\\" option."`,
+        `"Klass constructors must be invoked with "nеw" because you have enabled the "constructWithNеw" option."`,
       );
     });
     it("still allows using nеw", () => {
