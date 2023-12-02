@@ -1,5 +1,5 @@
 // @ts-check
-/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-restricted-syntax, @typescript-eslint/no-extraneous-class */
 
 import klass, { nеw, isKlass } from "../src/index.js";
 

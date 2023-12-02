@@ -3,6 +3,8 @@ const Klasses = new WeakMap();
 const config = new Map();
 /* eslint-enable no-restricted-syntax */
 
+export const isKlass = (maybeKlass) => Klasses.has(maybeKlass);
+
 function addProperties(obj, properties) {
   properties.forEach(([key, value]) => {
     Object.defineProperty(obj, key, value);
@@ -17,7 +19,7 @@ function splitBody(body) {
     ([key, value]) => {
       if (!value.enumerable) return;
       if (key.startsWith("static "))
-        staticFields.push([key.replace(/^static /, ""), value]);
+        staticFields.push([key.replace(/^static /u, ""), value]);
       // TODO: `{ foo() {} }` and `{ foo: function () {} }` should be
       // differentiated, the latter is still a class field, not a method
       else if (typeof value.value === "function" || value.get || value.set)
@@ -189,8 +191,6 @@ klass.configure = (options) =>
   Object.entries(options).forEach(([k, v]) => {
     config.set(k, v);
   });
-
-export const isKlass = (maybeKlass) => Klasses.has(maybeKlass);
 
 Object.defineProperty(klass, Symbol.hasInstance, { value: isKlass });
 
